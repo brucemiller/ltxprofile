@@ -1,0 +1,193 @@
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Getopt::Long qw(:config no_ignore_case);
+use Pod::Usage;
+use YAML::Tiny;
+
+#**********************************************************************
+# Parse command line
+my ($verbosity, $strict, $comments, $noparse, $includestyles) = (0, 0, 1, 0, 0);
+my ($format, $destination, $help, $showversion) = ('xml', '');
+my ($preamble, $postamble) = (undef, undef);
+my ($documentid);
+my $inputencoding;
+my $mode  = undef;
+my @paths = ();
+my (@preload);
+my ($help, $showversion, $verbosity, $validate, $omit_doctype) = (0, 0, 0, 1, 0);
+my ($sourcedir, $destination) = (undef, undef);
+my @paths = ();
+my ($format, $extension, $is_html, $urlstyle) = (undef, undef, undef, 'server');
+my ($numbersections) = (1);
+my ($stylesheet, $defaultcss, $defaultresources, $icon, @css, @javascript, @xsltparameters);
+my ($mathimagemag) = (1.75);
+my ($linelength, $plane1, $hackplane1) = (undef, undef, undef);
+my ($dographics, $svg,    $picimages)  = (undef, undef, undef);
+my @graphicsmaps = ();
+my ($split, $splitat, $splitpath, $splitnaming) = (undef, 'section', undef, 'id');
+my ($navtoc) = (undef);
+my %navtocstyles = (context => 1, normal => 1, none => 1);
+my ($prescan, $dbfile, $scan, $crossref, $sitedir, $resourcedir) = (undef, undef, 1, 1, undef, undef);
+my ($index, $permutedindex, $splitindex) = (1, undef, undef);
+my ($bibliography, $splitbibliography, @bibliographies) = (1, undef);
+my ($timestamp)          = (undef);
+my @math_formats         = ();
+my %removed_math_formats = ();
+my $splitback            = "//ltx:bibliography | //ltx:appendix | //ltx:index";
+my %splitpaths           = (
+  part       => "//ltx:part | $splitback",
+  chapter    => "//ltx:part | //ltx:chapter | $splitback",
+  section    => "//ltx:part | //ltx:chapter | //ltx:section | $splitback",
+  subsection => "//ltx:part | //ltx:chapter | //ltx:section | //ltx:subsection | $splitback",
+  subsubsection => "//ltx:part | //ltx:chapter | //ltx:section | //ltx:subsection | //ltx:subsubsection | $splitback");
+
+# Obsolete...
+my $parallelmath;
+
+GetOptions(
+  "destination=s"   => sub { $destination=$_[1];
+			     add("global: { destination: '$_[1]' }"); },
+  "output=s"        => sub { $destination=$_[1];
+			     add("global: { destination: '$_[1]' }"); },
+  "preload=s"       => sub { add("digest: { preload: '$_[1]' }"); },
+  "path=s"          => sub { add("global: { path: '$_[1]' }"); },
+  "preamble=s"      => sub { add("digest: { preamble: '$_[1]' }"); },
+  "postamble=s"     => sub { add("digest: { postamble: '$_[1]' }"); },
+  "quiet"           => sub { $verbosity--; },
+  "verbose"         => sub { $verbosity++; },
+  "strict"          => sub { add("global: { strict: true }"); },
+  "xml"             => sub { add(format => 'xml'); },
+  "tex"             => sub { add(format => 'tex'); },
+  "box"             => sub { add(format = 'box'); },
+  "bibtex"          => sub { add(mode = 'BibTeX'); },
+  "noparse"         => sub { add("mathparser: { enabled: false }")); },
+  "includestyles"   => sub { add("digest: {includestyles: true"); },
+  "inputencoding=s" => sub { add("digest: {inputencoding : '$_[1]'}"); },
+  "comments!"       => sub { add("digest: {includecomments: ".Boole($_[1])."}"); },
+  "debug=s"         => sub { no strict 'refs'; ${ 'LaTeXML::' . $_[1] . '::DEBUG' } = 1; },
+  "documentid=s"    => sub { add("digest: {documentid: '$_[1]'}"); },
+  "VERSION"         => \$showversion,
+  "help"            => \$help,
+  # Source Options
+  "sourcedirectory=s" => sub { add("post: {sourcedir: '$_[1]'}"); },
+  "validate!"         => sub { add("post: {validate: ".Boole($_[1])."}"); },
+  "path=s"            => sub { add("global: { paths: ['$_[1]'] }"); },
+
+  # Basics
+  "format=s" => \$format,
+  "destination=s" => sub { $destination = $_[1];
+    if ((!defined $extension) && ($destination =~ /\.(\w)$/)) {
+      $extension = $1; }
+    if (!defined $format) {
+      $format = 'xhtml' if $destination =~ /\.xhtml$/;
+      $format = 'html5' if $destination =~ /\.html$/; } },
+  "omitdoctype!"    => \$omit_doctype,
+  "numbersections!" => \$numbersections,
+  # Some general XSLT/CSS options.
+  "stylesheet=s"      => \$stylesheet,
+  "timestamp=s"       => \$timestamp,
+  "defaultcss!"       => \$defaultcss,
+  "defaultresources!" => \$defaultresources,
+  "css=s"             => \@css,
+  "javascript=s"      => \@javascript,
+  "icon=s"            => \$icon,
+  "xsltparameter=s"   => \@xsltparameters,
+  # Options for broader document set processing
+  "split!"          => \$split,
+  "splitat=s"       => sub { $splitat = $_[1]; $split = 1 unless defined $split; },
+  "splitpath=s"     => sub { $splitpath = $_[1]; $split = 1 unless defined $split; },
+  "splitnaming=s"   => sub { $splitnaming = $_[1]; $split = 1 unless defined $split; },
+  "scan!"           => \$scan,
+  "crossref!"       => \$crossref,
+  "urlstyle=s"      => \$urlstyle,
+  "navigationtoc=s" => \$navtoc,
+  "navtoc=s"        => \$navtoc,
+  # Generating indices
+  "index!"         => \$index,
+  "permutedindex!" => \$permutedindex,
+  "splitindex!"    => \$splitindex,
+  # Generating Bibliographies
+  "bibliography=s"     => \@bibliographies,
+  "nobibliography"     => sub { $bibliography = 0; },
+  "splitbibliography!" => \$splitbibliography,
+  # Options for two phase processing
+  "prescan"             => \$prescan,
+  "dbfile=s"            => \$dbfile,
+  "sitedirectory=s"     => \$sitedir,
+  "resourcedirectory=s" => \$resourcedir,
+  "mathimages"                  => sub { add("mathimages: {enabled: true}"); },
+  "nomathimages"                => sub { add("mathimages: {enabled: false}"); },
+  "mathsvg"                     => sub { add("mathsvg: {enabled: true}"); },
+  "nomathsvg"                   => sub { add("mathsvg: {enabled: false}"); },
+  "linelength=i"                => \$linelength,
+  "plane1!"                     => \$plane1,
+  "hackplane1!"                 => \$hackplane1,
+  "presentationmathml|pmml"     => sub { add("pmml: {enabled: true}"); },
+  "contentmathml|cmml"          => sub { add("cmml: {enabled: true}"); },
+  "openmath|om"                 => sub { add("om: {enabled: true}"); },
+  "nopresentationmathml|nopmml" => sub { add("pmml: {enabled: false}"); },
+  "nocontentmathml|nocmml"      => sub { add("cmml: {enabled: false}"); },
+  "noopenmath|noom"             => sub { add("om: {enabled: false}"); },
+  "parallelmath!"               => \$parallelmath,
+  "keepXMath"                   => sub { add("xmath: {enabled: true}"); },
+  "nokeepXMath"                 => sub { add("xmath: {enabled: false}"); },
+  "mathtex"                     => sub { add("mathtex: {enabled: true}"); },
+  "nomathtex"                   => sub { add("mathtex: {enabled: false}"); },
+  # For graphics: vaguely similar issues, but more limited.
+  # includegraphics images (eg. ps) can be converted to webimages (eg.png)
+  # picture/pstricks images can be converted to png or possibly svg.
+  "graphicimages!" => \$dographics,
+  "graphicsmap=s"  => \@graphicsmaps,
+  "svg!"           => \$svg,
+  "pictureimages!" => \$picimages,
+
+  ) or pod2usage(-message => $LaTeXML::IDENTITY,
+  -exitval => 1, -verbose => 0, -output => \*STDERR);
+pod2usage(-message => $LaTeXML::IDENTITY, -exitval => 1, -verbose => 2, -output => \*STDOUT) if $help;
+
+my $source = $ARGV[0];
+
+our $config={};
+LoadProfile($config,'LaTeXML');
+if($source =~/\.(tex|bib)$/){
+  LoadProfile($config,$1); }
+
+foreach my $option (@options){
+  my($name,$value)=@$option;
+  if($name =~ /^(profile|format)$/){
+    LoadProfile($config, $value); }
+  elsif(($name eq 'destination') && !$format){
+    # AND record destination!
+    if($value =~/\.(\w+)$/){
+      LoadProfile($config, $1); } }
+  else {
+    regexp the $option to $YAML
+      parse $YAML merging into $cfg.  }  }
+
+#======================================================================
+# Parse a profile file, merging it into $config
+sub ParseProfile {
+  my($config, $source)=@_;
+  # just assume all are here, for now.
+  my $path = $PROFILEDIR.'/'.$source.'.ltxprofile';
+  MergeProfile($config,YAML::Tiny->read($path)); }
+
+# Parse a profile string, merging it into $config
+sub ParseProfileString {
+  my($config, $string)=@_;
+  MergeProfile($config,YAML::Tiny->parse($string)); }
+
+# Merge the $yaml data into $config
+sub MergeProfile {
+  my($config,$yaml)=@_;
+   foreach ($name,$value) {
+     if($name eq 'profile'){
+        ParseProfile($config,$value); }
+     elsif($value is a hash){
+        merge $value into $$cfg{$name} ;
+     else {
+        $$cfg{$name} = $value; } }
+   } }
+#======================================================================
