@@ -1,0 +1,253 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Getopt::Long qw(:config no_ignore_case);
+use Pod::Usage;
+use YAML::Tiny;
+use Data::Dumper;
+use Text::Wrap;
+
+#**********************************************************************
+my $CONFIGDIR = "$FindBin::RealBin/../lib/Config";
+# Parse command line
+my $verbosity;
+my $splitback  = "//ltx:bibliography | //ltx:appendix | //ltx:index";
+my %splitpaths = (
+  part       => "//ltx:part | $splitback",
+  chapter    => "//ltx:part | //ltx:chapter | $splitback",
+  section    => "//ltx:part | //ltx:chapter | //ltx:section | $splitback",
+  subsection => "//ltx:part | //ltx:chapter | //ltx:section | //ltx:subsection | $splitback",
+  subsubsection => "//ltx:part | //ltx:chapter | //ltx:section | //ltx:subsection | //ltx:subsubsection | $splitback");
+
+my $sawformat;
+my $sawinputformat;
+my $destination;
+my $opts = {};    # not-yet-handled options.
+# NOTE: Need provision for checking for allowed values of certain parameters?
+#  Handled during command-line processing? during config parsing? during instanciation?
+my @options = ();
+sub add { push(@options, @_); }
+sub Boole { return ($_[0] ? 'true' : 'false'); }
+my $spec = {
+  # Basics and Paths
+  "output=s"      => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
+  "destination=s" => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
+  "base=s"      => sub { add("global:\n  basedir: '$_[1]'"); },             # how diff from sitedir?
+  "log=s"       => sub { add("global:\n  log: '$_[1]'"); },
+  "path=s"      => sub { add("global:\n  paths:\n  -'$_[1]'"); },
+  "strict"      => sub { add("global:\n  strict: true"); },
+  "validate!"   => sub { add("global:\n   validate: " . Boole($_[1])); },
+  "preload=s"   => sub { add("digest:\n  preload: '$_[1]'"); },
+  "preamble=s"  => sub { add("digest:\n  preamble: '$_[1]'"); },
+  "postamble=s" => sub { add("digest:\n  postamble: '$_[1]'"); },
+  "comments!"       => sub { add("digest:\n  includecomments: " . Boole($_[1])); },
+  "documentid=s"    => sub { add("digest:\n  documentid: '$_[1]'"); },
+  "includestyles"   => sub { add("digest:\n  includestyles: true"); },
+  "inputencoding=s" => sub { add("digest:\n  inputencoding : '$_[1]'"); },
+  "xml"             => sub { add("include: xml"); $sawformat = 1; },
+  "tex"             => sub { add("include: tex"); $sawformat = 1; },                  # TeX OUTPUT!!!!
+  "box"             => sub { add("include: box"); $sawformat = 1; },
+  "format=s"        => sub { add("include: $_[1]"); $sawformat = 1; },
+  "bibtex"          => sub { add("include: bib"); $sawinputformat = 1; },
+  "profile=s"       => sub { add("include: '$_[1]'"); },
+  "mode=s"  => sub { add("include: '$_[1]'"); },                                  # alias for profile?
+  "noparse" => sub { add("mathparser:\n  enabled: false"); },
+  "parse=s" => sub { add("mathparser:\n  enabled: true\n  engine: '$_[1]'"); },
+  "cache_key=s"              => \$$opts{cache_key},                                         # ?
+  "source=s"                 => \$$opts{source},                                            # ?
+  "embed"                    => sub { add("packager:\n whatsout: fragment"); },
+  "whatsin=s"                => sub { add("global:\n  whatsin: '$_[1]'"); },                # global??
+  "whatsout=s"               => sub { add("packager:\n whatsout: '$_[1]'"); },
+  "autoflush=i"              => sub { add("daemon:\n   input_limit: '$_[1]'"); },
+  "timeout=i"                => sub { add("daemon:\n   timeout: '$_[1]'"); },
+  "expire=i"                 => sub { add("daemon:\n   expire: '$_[1]'"); },
+  "address=s"                => sub { add("daemon:\n   address: '$_[1]'"); },
+  "port=i"                   => sub { add("daemon:\n   port: '$_[1]'"); },
+  "post!"                    => \$$opts{post},
+  "omitdoctype!"             => sub { add("writer:\n   omitdoctype: " . Boole($_[1])); },
+  "mathimages!"              => sub { add("mathimages:\n   enabled: " . Boole($_[1])); },
+  "mathimagemagnification=f" => sub { add("mathimages:\n   magnification: '$_[1]'"); },
+  "mathsvg!"                 => sub { add("mathsvg:\n   enabled: " . Boole($_[1])); },
+  "linelength=i"             => sub { add("pmml:\n   linelength: $_[1]"); },
+  "plane1!"                  => sub { add("pmml:\n   plane1: " . Boole($_[1])); },
+  "hackplane1!"              => sub { add("pmml:\n   hackplane1: " . Boole($_[1])); },
+  "presentationmathml|pmml!" => sub { add("pmml:\n   enabled: " . Boole($_[1])); },
+  "contentmathml|cmml!"      => sub { add("cmml:\n   enabled: " . Boole($_[1])); },
+  "openmath|om!"             => sub { add("om:\n   enabled: " . Boole($_[1])); },
+  "keepXMath!"               => sub { add("xmath:\n   enabled: " . Boole($_[1])); },
+  "mathtex!"                 => sub { add("mathtex:\n   enabled: " . Boole($_[1])); },
+  "stylesheet=s" => sub { add("xslt:\n  enabled: true\n  stylesheet: '$_[1]'"); },
+  "xsltparameter=s"   => sub { add("xslt:\n  enabled: true\n  parameters:\n - '$_[1]'"); },
+  "timestamp=s"       => sub { add("xslt:\n  timestamp: '$_[1]'"); },
+  "defaultresources!" => sub { add("xslt:\n  defaultresources: " . Boole($_[1])); },
+  "css=s"             => sub { add("xslt:\n  css:\n  - '$_[1]'"); },
+  "javascript=s"      => sub { add("xslt:\n  javascript:\n  - '$_[1]'"); },
+  "icon=s"            => sub { add("xslt:\n  icon: '$_[1]'"); },
+  "split!"            => sub { add("split:\n  enabled: " . Boole($_[1])); },
+  "splitat=s"         => sub { add("split:\n  enabled: true\n  splitat='$_[1]'"); },
+  "splitpath=s"       => sub { add("split:\n  enabled: true\n  splitpath='$_[1]'"); },
+  "splitnaming=s"     => sub { add("split:\n  enabled: true\n  splitnaming='$_[1]'"); },
+  "scan!"             => sub { add("scan:\n  enabled: true"); },
+  "prescan"    => sub { add("scan:\n  enabled: true"); },           # AND disable other post!!!
+  "crossref!"  => sub { add("crossref:\n  enabled: true"); },
+  "urlstyle=s" => sub { add("crossref:\n  urlstyle: '$_[1]'"); },
+  "navigationtoc|navtoc=s" => sub { add("crossref { navigation_toc: '$_[1]'"); },
+  "numbersections!"        => sub { add("crossref:\n   numbersections: " . Boole($_[1])); },
+  "index!"                 => sub { add("index:\n   enabled: " . Boole($_[1])); },
+  "permutedindex!"         => sub { add("index:\n   permuted: true"); },
+  "splitindex!"            => sub { add("index:\n   split: " . Boole($_[1])); },
+  "bibliography=s"         => sub { add("bib:\n   bibliographies:\n  - '$_[1]'"); },
+  "nobibliography"         => sub { add("bib:\n   enabled: false"); },
+  "splitbibliography!"     => sub { add("bib:\n   split: " . Boole($_[1])); },
+  "dbfile=s"               => sub { add("global:\n   dbfile: '$_[1]'"); },
+  "sitedirectory=s"        => sub { add("global:\n   sitedirectory: '$_[1]'"); },
+  "resourcedirectory=s"    => sub { add("global:\n   resourcedirectory: '$_[1]'"); },
+  "sourcedirectory=s"      => sub { add("global:\n   sourcedir: '$_[1]'\n"); },
+  "graphicimages!"         => sub { add("graphics:\n   enabled: " . Boole($_[1])); },
+  "graphicsmap=s"  => \@{ $$opts{graphicsmaps} },
+  "svg!"           => sub { add("picturesvg:\n   enabled: " . Boole($_[1])); },
+  "pictureimages!" => sub { add("pictureimages:\n   enabled: " . Boole($_[1])); },
+  # HELP
+
+  "quiet"   => sub { $verbosity--; },
+  "verbose" => sub { $verbosity++; },
+
+  "VERSION!" => \$$opts{showversion},
+  "debug=s"  => \@{ $$opts{debug} },
+  "help"     => \$$opts{help}
+};
+
+GetOptions(%$spec);
+my $source = $ARGV[0];
+
+# Add a couple of special case options
+if (!$sawformat && $destination && ($destination =~ /\.(\w+)$/)) {
+  unshift(@options, "include: $1"); }
+# Load configuration implied by input & output formats
+if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
+  unshift(@options, "include: $1"); }
+unshift(@options, "global:\n  verbosity: $verbosity") if $verbosity;
+
+my $yoptions = join("\n---\n", @options);
+print "Options as YAML:\n$yoptions\n";
+
+our $config = LoadConfiguration($yoptions);
+
+#print "Config: " . Dumper($config);
+makePlan($config);
+
+#======================================================================
+# Possible enhancements:
+#   base config could also contain field.type to specify the expected type?
+sub LoadConfiguration {
+  my ($options) = @_;    # options in YAML form
+  my $config = {};
+  # Load base configuration
+  { local $LaTeXML::CONFIG_NOWARN = 1;    # HACK!!
+    loadConfigFile($config, 'LaTeXML'); }
+  # Invoke the configuration (multiple yaml docs) implied by command-line options
+  mergeConfig($config, YAML::Tiny->read_string($options));
+  return $config; }
+
+sub loadConfigFile {
+  my ($config, $source) = @_;
+  local $LaTeXML::CONFIG_FILE = $source;
+  # Eventually search for config files
+  my $path = $CONFIGDIR . '/' . $source . '.ltxcfg';
+  if (-f $path) {
+    print "Loading configuration $source ($path)\n";
+    mergeConfig($config, YAML::Tiny->read($path)); }
+  else {
+    warn "Missing config file $path\n"; } }
+
+# Merge the $yaml data into $config
+sub mergeConfig {
+  my ($config, $yaml) = @_;
+  foreach my $ydoc (@$yaml) {    # foreach yaml "document"
+    foreach my $name (keys %$ydoc) {
+      my $value = $$ydoc{$name};
+      if ($name eq 'include') {
+        loadConfigFile($config, $value); }
+      else {
+        mergeValue($config, $value, $name); } } } }
+
+sub mergeValue {
+  my ($config, $value, @keys) = @_;
+  my $object  = $config;
+  my @context = @keys[0 .. $#keys - 1];
+  my $key     = $keys[-1];
+  map { $object = $object && $$object{$_} } @context;
+  my $prev     = $$object{$key};
+  my $prevtype = ref $prev;
+  my $type     = ref $value;
+  configWarning("Unknown key (possible typo?)", $value, @keys)
+
+    if !$LaTeXML::CONFIG_NOWARN && (!$object || !exists $$object{$key});
+  if (!$prev || !$prevtype) {
+    $$object{$key} = $value; }
+  elsif ($prevtype eq 'HASH') {
+    if ($type eq 'HASH') {
+      map { mergeValue($config, $$value{$_}, @keys, $_) } keys %$value; }
+    else {
+      configWarning("Cannot merge value of type $type into mapping", $value, @keys); } }
+  elsif ($prevtype eq 'ARRAY') {
+    push(@{ $$object{$key} }, ($type eq 'ARRAY' ? @$value : $value)); }
+  else {
+    configWarning("Not sure what $prev (of type $prevtype) is doing in configuration"); } }
+
+sub configWarning {
+  my ($message, $value, @keys) = @_;
+  warn "Config warning in $LaTeXML::CONFIG_FILE: $message\n"
+    . " for " . join('->', @keys) . " = $value\n"; }
+#======================================================================
+our @CATEGORIES;
+
+BEGIN {
+  # Try to condense this a bit more? (using sensible "position" values to sort within categories)
+  # And, not yet configurable either!!
+  @CATEGORIES = (qw(
+      digest
+      split scan
+      fillin
+      crossref
+      graphics
+      math
+      xslt
+      writer
+      packager));
+}
+
+sub makePlan {
+  my ($config) = @_;
+  my $indent = "        ";
+  print "Global: " . wrap("", $indent, minidump($$config{global})) . "\n";
+  print "Daemon: " . wrap("", $indent, minidump($$config{daemon})) . "\n";
+  my %categorized = ();
+  foreach my $key (keys %$config) {
+    next if $key =~ /^(?:global|daemon)$/;
+    if (my $cat = $$config{$key}{category}) {
+      push(@{ $categorized{$cat} }, $key) if ($$config{$key}{enabled} || 'false') eq 'true'; }
+    else {
+      warn "Unknown configuration group $key"; } }
+  my @processors = ();
+  foreach my $cat (@CATEGORIES) {
+    my @p = ($categorized{$cat} ? @{ $categorized{$cat} } : ());    # SORT!!??
+    push(@processors, sort { $$config{$a}{position} <=> $$config{$b}{position} } @p); }
+  print "Processing plan:\n";
+  foreach my $p (@processors) {
+    print "$p : " . wrap("", $indent, minidump($$config{$p})) . "\n"; }
+}
+
+sub minidump {
+  my ($value) = @_;
+  my $type = ref $value;
+  if (!$type) {
+    return (defined $value ? $value : 'undef'); }
+  elsif ($type eq 'HASH') {
+    return '{' . join(', ', map { $_ . '=>' . minidump($$value{$_}) } sort keys %$value) . '}'; }
+  elsif ($type eq 'ARRAY') {
+    return '[' . join(', ', map { minidump($_) } @$value) . ']'; } }
+
+#======================================================================
