@@ -1,0 +1,9 @@
+#  -*- mode:yaml -*-
+include: post
+pmml:
+  enabled: true
+picturesvg:
+  enabled: true
+xslt:
+  enabled: true
+  stylesheet: LaTeXML-html5.xsl

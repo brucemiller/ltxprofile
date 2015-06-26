@@ -1,0 +1,170 @@
+#  -*- mode:yaml -*-
+# LaTeXML.ltxprofile
+---
+global:
+  destination:
+  basedir:
+  log: STDERR
+  paths: []
+  strict: false
+  validate: false
+  verbosity: 0
+  preload: []
+  preamble:
+  postamble:
+  whatsin:
+daemon:
+  input_limit:
+  timeout:
+  expire:
+  address:
+  port:
+bibtex:
+  category: digest
+  position: -10
+  enabled: false
+  input-extension: bib
+  pool: BibTeX.pool.ltxml
+digest :
+  category: digest
+  position: 0
+  enabled: false
+  class: LaTeXML::Core
+  includecomments: false
+  documentid: 
+  includestyles: false
+  inputencoding:
+rewrite :
+  category: digest
+  position: 10
+  enabled: false
+  class: LaTeXML::Core::Rewrite
+mathparser :
+  category: digest
+  position: 20
+  enabled: false
+  class: LaTeXML::MathParser
+  engine: Parse::RecDescent
+  grammar: MathGrammar
+split:
+  category: split
+  enabled: false
+  class: LaTeXML::Post::Split
+  splitat:
+  splitpath:
+  splitnaming:
+scan:
+  category: scan
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::Scan
+crossref:
+  category: crossref
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::CrossRef
+  urlstyle:
+  navigation_toc:
+  numbersections: true
+mathimages:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::MathImages
+  format: png
+  magnification: 1
+mathsvg:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::MathImages
+  format: svg
+pmml:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::MathML::Presentation
+  linelength:
+  plane1: true
+  hackplane1: false
+  unicodemap: something
+cmml:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::MathML::Content
+  mode: pragmatic
+om:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::OpenMath
+xmath:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::XMath
+mathtex:
+  category: math
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::TeXMath
+graphics:
+  category: graphics
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::Graphics
+  maps: []
+picturesvg:
+  category: graphics
+  position: 0
+  class: LaTeXML::Post::SVG
+  enabled: false
+pictureimages:
+  category: graphics
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::PictureImages
+bibliography :
+  category: fillin
+  position: 0
+  enabled: true
+  class: LaTeXML::Post::MakeBibliograpy
+  bibliography: []
+  split: false
+index :
+  category: fillin
+  position: 0
+  enabled: true
+  class: LaTeXML::Post::MakeIndex
+  permuted: false
+  split: false
+xslt  :
+  category: xslt
+  position: 0
+  enabled: false
+  class: LaTeXML::Post::XSLT
+  stylesheet:
+  timestamp:
+  defaultresources: true
+  css: []
+  javascript: []
+  icon:
+  parameters: []
+writer :
+  category: writer
+  position: 0
+  enabled: true
+  omitdoctype: false
+manifest:
+  category: packager
+  position: -10
+  enabled: false
+  class: LaTeXML::Post::Manifest
+packager:
+  category: packager
+  position: 0
+  enabled: false
+  class:
+  whatsout:
+

@@ -1,0 +1,5 @@
+#  -*- mode:yaml -*-
+# Enable basic digestion BibTeX->XML
+include: tex
+bibtex:
+  enabled: true

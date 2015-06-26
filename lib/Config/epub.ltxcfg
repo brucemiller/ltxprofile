@@ -1,0 +1,12 @@
+#  -*- mode:yaml -*-
+include: xhtml
+xslt:
+  enabled: true
+  stylesheet: LaTeXML-epub3.xsl
+manifest:
+  enabled: true
+  class: LaTeXML::Post::Manifest::Epub
+packager:
+  enabled: true
+  class: LaTeXML::Post::Zip
+

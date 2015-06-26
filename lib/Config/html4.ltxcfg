@@ -1,0 +1,9 @@
+#  -*- mode:yaml -*-
+include: post
+mathimages:
+  enabled: true
+pictureimages:
+  enabled: true
+xslt:
+  enabled: true
+  stylesheet: LaTeXML-html4.xsl
