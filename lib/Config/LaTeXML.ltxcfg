@@ -128,14 +128,14 @@ pictureimages:
 bibliography :
   category: fillin
   position: 0
-  enabled: true
+  enabled: false
   class: LaTeXML::Post::MakeBibliograpy
   bibliography: []
   split: false
 index :
   category: fillin
   position: 0
-  enabled: true
+  enabled: false
   class: LaTeXML::Post::MakeIndex
   permuted: false
   split: false
@@ -154,7 +154,7 @@ xslt  :
 writer :
   category: writer
   position: 0
-  enabled: true
+  enabled: false
   omitdoctype: false
 manifest:
   category: packager
