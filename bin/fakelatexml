@@ -130,7 +130,7 @@ if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
   unshift(@options, "include: $1"); }
 unshift(@options, "global:\n  verbosity: $verbosity") if $verbosity;
 
-my $yoptions = join("\n---\n", @options);
+my $yoptions = join("\n---\n", @options)."\n";
 print "Options as YAML:\n$yoptions\n";
 
 our $config = LoadConfiguration($yoptions);
@@ -165,6 +165,9 @@ sub loadConfigFile {
 # Merge the $yaml data into $config
 sub mergeConfig {
   my ($config, $yaml) = @_;
+#  print "Merging from ".Dumper($yaml)."\n";
+  if(! $yaml){
+      warn "Yaml error: ".YAML::Tiny->errstr."\n"; }
   foreach my $ydoc (@$yaml) {    # foreach yaml "document"
     foreach my $name (keys %$ydoc) {
       my $value = $$ydoc{$name};
