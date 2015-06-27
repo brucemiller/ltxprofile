@@ -205,45 +205,42 @@ sub configWarning {
   warn "Config warning in $LaTeXML::CONFIG_FILE: $message\n"
     . " for " . join('->', @keys) . " = $value\n"; }
 #======================================================================
-our @CATEGORIES;
+our @PHASES;
 
 BEGIN {
   # Try to condense this a bit more? (using sensible "position" values to sort within categories)
   # And, not yet configurable either!!
-  @CATEGORIES = (qw(
-      digest
-      split scan
-      fillin
-      crossref
-      graphics
-      math
+  @PHASES = (qw(
+      digestion
+      splitting
+      scanning
+      fillingin
+      crossreferencing
+      graphicstranslation
+      mathtranslation
       xslt
-      writer
-      packager));
+      packaging));
 }
 
 sub makePlan {
   my ($config) = @_;
-  my $indent = "        ";
-  print "Global: " . wrap("", $indent, minidump($$config{global})) . "\n";
-  print "Daemon: " . wrap("", $indent, minidump($$config{daemon})) . "\n";
-  my %categorized = ();
-  foreach my $key (keys %$config) {
-    next if $key =~ /^(?:global|daemon)$/;
-    if (my $cat = $$config{$key}{category}) {
-      push(@{ $categorized{$cat} }, $key) if ($$config{$key}{enabled} || 'false') eq 'true'; }
-    else {
-      warn "Unknown configuration group $key"; } }
+  print "Global: " . minidump($$config{global}) . "\n";
+  print "Daemon: " . minidump($$config{daemon}) . "\n";
   my @processors = ();
-  foreach my $cat (@CATEGORIES) {
-    my @p = ($categorized{$cat} ? @{ $categorized{$cat} } : ());    # SORT!!??
-    push(@processors, sort { $$config{$a}{position} <=> $$config{$b}{position} } @p); }
+  foreach my $phase (@PHASES) {
+    my @p = sort { $$config{$a}{position} <=> $$config{$b}{position} }
+      grep { (($$config{$_}{phase}||'') eq $phase) && (($$config{$_}{enabled}||'') eq 'true') }
+      keys %$config;
+    push(@processors, @p); }
   print "Processing plan:\n";
   foreach my $p (@processors) {
-    print "$p : " . wrap("", $indent, minidump($$config{$p})) . "\n"; }
+    print "$p : " . minidump($$config{$p}) . "\n"; }
 }
 
 sub minidump {
+  return wrap("","         ",minidump_aux($_[0])); }
+
+sub minidump_aux {
   my ($value) = @_;
   my $type = ref $value;
   if (!$type) {

@@ -20,13 +20,13 @@ daemon:
   address:
   port:
 bibtex:
-  category: digest
+  phase: digestion
   position: -10
   enabled: false
   input-extension: bib
   pool: BibTeX.pool.ltxml
 digest :
-  category: digest
+  phase: digestion
   position: 0
   enabled: false
   class: LaTeXML::Core
@@ -35,31 +35,31 @@ digest :
   includestyles: false
   inputencoding:
 rewrite :
-  category: digest
+  phase: digestion
   position: 10
   enabled: false
   class: LaTeXML::Core::Rewrite
 mathparser :
-  category: digest
+  phase: digestion
   position: 20
   enabled: false
   class: LaTeXML::MathParser
   engine: Parse::RecDescent
   grammar: MathGrammar
 split:
-  category: split
+  phase: splitting
   enabled: false
   class: LaTeXML::Post::Split
   splitat:
   splitpath:
   splitnaming:
 scan:
-  category: scan
+  phase: scanning
   position: 0
   enabled: false
   class: LaTeXML::Post::Scan
 crossref:
-  category: crossref
+  phase: crossreferencing
   position: 0
   enabled: false
   class: LaTeXML::Post::CrossRef
@@ -67,20 +67,20 @@ crossref:
   navigation_toc:
   numbersections: true
 mathimages:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::MathImages
   format: png
   magnification: 1
 mathsvg:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::MathImages
   format: svg
 pmml:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::MathML::Presentation
@@ -89,58 +89,58 @@ pmml:
   hackplane1: false
   unicodemap: something
 cmml:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::MathML::Content
   mode: pragmatic
 om:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::OpenMath
 xmath:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::XMath
 mathtex:
-  category: math
+  phase: mathtranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::TeXMath
 graphics:
-  category: graphics
+  phase: graphicstranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::Graphics
   maps: []
 picturesvg:
-  category: graphics
+  phase: graphicstranslation
   position: 0
   class: LaTeXML::Post::SVG
   enabled: false
 pictureimages:
-  category: graphics
+  phase: graphicstranslation
   position: 0
   enabled: false
   class: LaTeXML::Post::PictureImages
 bibliography :
-  category: fillin
+  phase: fillingin
   position: 0
   enabled: false
   class: LaTeXML::Post::MakeBibliograpy
   bibliography: []
   split: false
 index :
-  category: fillin
+  phase: fillingin
   position: 0
   enabled: false
   class: LaTeXML::Post::MakeIndex
   permuted: false
   split: false
 xslt  :
-  category: xslt
+  phase: xslt
   position: 0
   enabled: false
   class: LaTeXML::Post::XSLT
@@ -152,18 +152,18 @@ xslt  :
   icon:
   parameters: []
 writer :
-  category: writer
+  phase: packaging
   position: 0
   enabled: false
   omitdoctype: false
 manifest:
-  category: packager
-  position: -10
+  phase: packaging
+  position: 10
   enabled: false
   class: LaTeXML::Post::Manifest
 packager:
-  category: packager
-  position: 0
+  phase: packaging
+  position: 20
   enabled: false
   class:
   whatsout:
