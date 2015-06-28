@@ -1,170 +1,266 @@
 #  -*- mode:yaml -*-
 # LaTeXML.ltxprofile
 ---
+definition:
+  global:
+    destination: pathname
+    basedir:  pathname
+    log:      pathname
+    paths:    list[pathname]
+    strict:   boolean
+    validate: boolean
+    verbosity: int
+    preload:  list[pathname]
+    preamble: string
+    postamble: string
+    whatsin:  string
+  daemon:
+    input_limit: int
+    timeout:    int
+    expire:     int
+    address:    string
+    port:       int
+  bibtex:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    input-extension: string
+    pool:       pathname
+  digest :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    includecomments: boolean
+    documentid: string
+    includestyles: boolean
+    inputencoding: string
+  rewrite :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  mathparser :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    engine:     classname
+    grammar:    pathname
+  split:
+    phase:      phasename
+    enabled:    boolean
+    class:      classname
+    splitpath:  string
+    splitnaming: choice[id,idrelative,label,labelrelative]
+  scan:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  bibliography :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    bibliography: list[pathname]
+    split:      boolean
+  index :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    permuted:   boolean
+    split:      boolean
+  crossref:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    urlstyle:   choice[server,negotiated,file]
+    navigation_toc: boolean
+    numbersections: boolean
+  mathimages:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    format:     string
+    magnification: int
+  mathsvg:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    format:     string
+  pmml:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    linelength: int
+    plane1:     boolean
+    hackplane1: boolean
+  cmml:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    mode:       string
+  om:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  xmath:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  mathtex:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  graphics:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    graphics_types: list[string]
+    type_properties : hash[]
+  picturesvg:
+    phase:      phasename
+    position:   int
+    class:      classname
+    enabled:    boolean
+  pictureimages:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  xslt  :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    stylesheet: pathname
+    timestamp:  date
+    defaultresources: boolean
+    css:        list[pathname]
+    javascript: list[pathname]
+    icon:       pathname
+    parameters: list[string]
+  writer :
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    omitdoctype: boolean
+  manifest:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+  packager:
+    phase:      phasename
+    position:   int
+    enabled:    boolean
+    class:      classname
+    whatsout:   string
+---
 global:
   destination:
-  basedir:
   log: STDERR
-  paths: []
-  strict: false
-  validate: false
   verbosity: 0
-  preload: []
-  preamble:
-  postamble:
-  whatsin:
 daemon:
-  input_limit:
-  timeout:
-  expire:
-  address:
-  port:
+
+# Core set of processors; all disabled by default
 bibtex:
-  phase: digestion
-  position: -10
-  enabled: false
+  phase:         digestion
+  position:      -10
   input-extension: bib
-  pool: BibTeX.pool.ltxml
+  pool:          BibTeX.pool.ltxml
 digest :
-  phase: digestion
-  position: 0
-  enabled: false
-  class: LaTeXML::Core
-  includecomments: false
-  documentid: 
-  includestyles: false
-  inputencoding:
+  phase:         digestion
+  class:         LaTeXML::Core
 rewrite :
-  phase: digestion
-  position: 10
-  enabled: false
-  class: LaTeXML::Core::Rewrite
+  phase:         digestion
+  position:      10
+  class:         LaTeXML::Core::Rewrite
 mathparser :
-  phase: digestion
-  position: 20
-  enabled: false
-  class: LaTeXML::MathParser
-  engine: Parse::RecDescent
-  grammar: MathGrammar
+  phase:         digestion
+  position:      20
+  class:         LaTeXML::MathParser
+  engine:        Parse::RecDescent
+  grammar:       MathGrammar
 split:
-  phase: splitting
-  enabled: false
-  class: LaTeXML::Post::Split
-  splitat:
-  splitpath:
-  splitnaming:
+  phase:         splitting
+  class:         LaTeXML::Post::Split
 scan:
-  phase: scanning
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::Scan
+  phase:         scanning
+  class:         LaTeXML::Post::Scan
+bibliography :
+  phase:         crossreferencing
+  class:         LaTeXML::Post::MakeBibliography
+  bibliography:  []
+index :
+  phase:         crossreferencing
+  class:         LaTeXML::Post::MakeIndex
+  permuted:      false
 crossref:
-  phase: crossreferencing
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::CrossRef
-  urlstyle:
-  navigation_toc:
-  numbersections: true
+  phase:         crossreferencing
+  position:      100
+  class:         LaTeXML::Post::CrossRef
 mathimages:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MathImages
-  format: png
+  phase:         mathtranslation
+  class:         LaTeXML::Post::MathImages
+  format:        png
   magnification: 1
 mathsvg:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MathImages
-  format: svg
+  phase:         mathtranslation
+  class:         LaTeXML::Post::MathImages
+  format:        svg
 pmml:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MathML::Presentation
-  linelength:
-  plane1: true
-  hackplane1: false
-  unicodemap: something
+  phase:         mathtranslation
+  class:         LaTeXML::Post::MathML::Presentation
+  plane1:        true
 cmml:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MathML::Content
-  mode: pragmatic
+  phase:         mathtranslation
+  class:         LaTeXML::Post::MathML::Content
+  mode:          pragmatic
 om:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::OpenMath
+  phase:         mathtranslation
+  class:         LaTeXML::Post::OpenMath
 xmath:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::XMath
+  phase:         mathtranslation
+  class:         LaTeXML::Post::XMath
 mathtex:
-  phase: mathtranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::TeXMath
+  phase:         mathtranslation
+  class:         LaTeXML::Post::TeXMath
 graphics:
-  phase: graphicstranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::Graphics
-  maps: []
+  phase:         graphicstranslation
+  class:         LaTeXML::Post::Graphics
+#  maps:          []
 picturesvg:
-  phase: graphicstranslation
-  position: 0
-  class: LaTeXML::Post::SVG
-  enabled: false
+  phase:         graphicstranslation
+  class:         LaTeXML::Post::SVG
 pictureimages:
-  phase: graphicstranslation
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::PictureImages
-bibliography :
-  phase: fillingin
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MakeBibliograpy
-  bibliography: []
-  split: false
-index :
-  phase: fillingin
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::MakeIndex
-  permuted: false
-  split: false
+  phase:         graphicstranslation
+  class:         LaTeXML::Post::PictureImages
 xslt  :
-  phase: xslt
-  position: 0
-  enabled: false
-  class: LaTeXML::Post::XSLT
-  stylesheet:
-  timestamp:
+  phase:         xslt
+  class:         LaTeXML::Post::XSLT
   defaultresources: true
-  css: []
-  javascript: []
-  icon:
-  parameters: []
 writer :
-  phase: packaging
-  position: 0
-  enabled: false
-  omitdoctype: false
+  phase:         packaging
+  class:         LaTeXML::Post::Writer
 manifest:
-  phase: packaging
-  position: 10
-  enabled: false
-  class: LaTeXML::Post::Manifest
+  phase:         packaging
+  position:      10
+  class:         LaTeXML::Post::Manifest
 packager:
-  phase: packaging
-  position: 20
-  enabled: false
-  class:
-  whatsout:
+  phase:         packaging
+  position:      20
+
 

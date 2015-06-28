@@ -9,8 +9,10 @@ use YAML::Tiny;
 use Data::Dumper;
 use Text::Wrap;
 
-#**********************************************************************
 my $CONFIGDIR = "$FindBin::RealBin/../lib/Config";
+#======================================================================
+# Command line options translation
+#======================================================================
 # Parse command line
 my $verbosity;
 my $splitback  = "//ltx:bibliography | //ltx:appendix | //ltx:index";
@@ -31,29 +33,28 @@ my @options = ();
 sub add { push(@options, @_); }
 sub Boole { return ($_[0] ? 'true' : 'false'); }
 my $spec = {
-  # Basics and Paths
   "output=s"      => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
   "destination=s" => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
-  "base=s"      => sub { add("global:\n  basedir: '$_[1]'"); },             # how diff from sitedir?
-  "log=s"       => sub { add("global:\n  log: '$_[1]'"); },
-  "path=s"      => sub { add("global:\n  paths:\n  -'$_[1]'"); },
-  "strict"      => sub { add("global:\n  strict: true"); },
-  "validate!"   => sub { add("global:\n   validate: " . Boole($_[1])); },
-  "preload=s"   => sub { add("digest:\n  preload: '$_[1]'"); },
-  "preamble=s"  => sub { add("digest:\n  preamble: '$_[1]'"); },
-  "postamble=s" => sub { add("digest:\n  postamble: '$_[1]'"); },
-  "comments!"       => sub { add("digest:\n  includecomments: " . Boole($_[1])); },
-  "documentid=s"    => sub { add("digest:\n  documentid: '$_[1]'"); },
-  "includestyles"   => sub { add("digest:\n  includestyles: true"); },
+  "base=s"        => sub { add("global:\n  basedir: '$_[1]'"); },                 # diff from sitedir?
+  "log=s"         => sub { add("global:\n  log: '$_[1]'"); },
+  "path=s"        => sub { add("global:\n  paths:\n  -'$_[1]'"); },
+  "strict"        => sub { add("global:\n  strict: true"); },
+  "validate!"     => sub { add("global:\n   validate: " . Boole($_[1])); },
+  "preload=s"     => sub { add("digest:\n  preload: '$_[1]'"); },
+  "preamble=s"    => sub { add("digest:\n  preamble: '$_[1]'"); },
+  "postamble=s"   => sub { add("digest:\n  postamble: '$_[1]'"); },
+  "comments!"     => sub { add("digest:\n  includecomments: " . Boole($_[1])); },
+  "documentid=s"  => sub { add("digest:\n  documentid: '$_[1]'"); },
+  "includestyles" => sub { add("digest:\n  includestyles: true"); },
   "inputencoding=s" => sub { add("digest:\n  inputencoding : '$_[1]'"); },
   "xml"             => sub { add("include: xml"); $sawformat = 1; },
-  "tex"             => sub { add("include: tex"); $sawformat = 1; },                  # TeX OUTPUT!!!!
+  "tex"             => sub { add("include: tex"); $sawformat = 1; },         # TeX OUTPUT!!!!
   "box"             => sub { add("include: box"); $sawformat = 1; },
   "format=s"        => sub { add("include: $_[1]"); $sawformat = 1; },
   "bibtex"          => sub { add("include: bib"); $sawinputformat = 1; },
   "profile=s"       => sub { add("include: '$_[1]'"); },
-  "mode=s"  => sub { add("include: '$_[1]'"); },                                  # alias for profile?
-  "noparse" => sub { add("mathparser:\n  enabled: false"); },
+  "mode=s"          => sub { add("include: '$_[1]'"); },                     # alias
+  "noparse"         => sub { add("mathparser:\n  enabled: false"); },
   "parse=s" => sub { add("mathparser:\n  enabled: true\n  engine: '$_[1]'"); },
   "cache_key=s"              => \$$opts{cache_key},                                         # ?
   "source=s"                 => \$$opts{source},                                            # ?
@@ -65,7 +66,7 @@ my $spec = {
   "expire=i"                 => sub { add("daemon:\n   expire: '$_[1]'"); },
   "address=s"                => sub { add("daemon:\n   address: '$_[1]'"); },
   "port=i"                   => sub { add("daemon:\n   port: '$_[1]'"); },
-  "post!"                    => \$$opts{post},
+  "post!"                    => sub { add("include: post"); },
   "omitdoctype!"             => sub { add("writer:\n   omitdoctype: " . Boole($_[1])); },
   "mathimages!"              => sub { add("mathimages:\n   enabled: " . Boole($_[1])); },
   "mathimagemagnification=f" => sub { add("mathimages:\n   magnification: '$_[1]'"); },
@@ -86,10 +87,13 @@ my $spec = {
   "javascript=s"      => sub { add("xslt:\n  javascript:\n  - '$_[1]'"); },
   "icon=s"            => sub { add("xslt:\n  icon: '$_[1]'"); },
   "split!"            => sub { add("split:\n  enabled: " . Boole($_[1])); },
-  "splitat=s"         => sub { add("split:\n  enabled: true\n  splitat='$_[1]'"); },
-  "splitpath=s"       => sub { add("split:\n  enabled: true\n  splitpath='$_[1]'"); },
-  "splitnaming=s"     => sub { add("split:\n  enabled: true\n  splitnaming='$_[1]'"); },
-  "scan!"             => sub { add("scan:\n  enabled: true"); },
+  "splitat=s"         => sub { my $path = $splitpaths{ $_[1] };
+    configWarning("Value not in [" . join(',', keys %splitpaths) . "]",
+      $_[1], 'split', 'splitat') unless $path;
+    add("split:\n  enabled: true\n  splitpath: '$path'"); },
+  "splitpath=s"   => sub { add("split:\n  enabled: true\n  splitpath: '$_[1]'"); },
+  "splitnaming=s" => sub { add("split:\n  enabled: true\n  splitnaming: '$_[1]'"); },
+  "scan!"         => sub { add("scan:\n  enabled: true"); },
   "prescan"    => sub { add("scan:\n  enabled: true"); },           # AND disable other post!!!
   "crossref!"  => sub { add("crossref:\n  enabled: true"); },
   "urlstyle=s" => sub { add("crossref:\n  urlstyle: '$_[1]'"); },
@@ -106,7 +110,11 @@ my $spec = {
   "resourcedirectory=s"    => sub { add("global:\n   resourcedirectory: '$_[1]'"); },
   "sourcedirectory=s"      => sub { add("global:\n   sourcedir: '$_[1]'\n"); },
   "graphicimages!"         => sub { add("graphics:\n   enabled: " . Boole($_[1])); },
-  "graphicsmap=s"  => \@{ $$opts{graphicsmaps} },
+  "graphicsmap=s" => sub {    # graphicsmap=srctype.desttype
+    my ($src, $dest) = split(/\./, $_[1]);
+    $dest = $src unless $dest;
+    add("graphics:\n  graphics_types: $src\n"
+        . "  type_properties:\n    $src:\n      destination_type: $dest"); },
   "svg!"           => sub { add("picturesvg:\n   enabled: " . Boole($_[1])); },
   "pictureimages!" => sub { add("pictureimages:\n   enabled: " . Boole($_[1])); },
   # HELP
@@ -119,6 +127,7 @@ my $spec = {
   "help"     => \$$opts{help}
 };
 
+#======================================================================
 GetOptions(%$spec);
 my $source = $ARGV[0];
 
@@ -130,7 +139,8 @@ if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
   unshift(@options, "include: $1"); }
 unshift(@options, "global:\n  verbosity: $verbosity") if $verbosity;
 
-my $yoptions = join("\n---\n", @options)."\n";
+#======================================================================
+my $yoptions = join("\n---\n", @options) . "\n";
 print "Options as YAML:\n$yoptions\n";
 
 our $config = LoadConfiguration($yoptions);
@@ -139,15 +149,31 @@ our $config = LoadConfiguration($yoptions);
 makePlan($config);
 
 #======================================================================
-# Possible enhancements:
-#   base config could also contain field.type to specify the expected type?
+# The known Processing Phases
+our @PHASES;
+
+BEGIN {
+  # Try to condense this a bit more? (using sensible "position" values to sort within phases)
+  # And, not yet configurable either!!
+  @PHASES = (qw(
+      digestion
+      splitting
+      scanning
+      crossreferencing
+      graphicstranslation
+      mathtranslation
+      xslt
+      packaging));
+}
+#======================================================================
 sub LoadConfiguration {
   my ($options) = @_;    # options in YAML form
   my $config = {};
   # Load base configuration
-  { local $LaTeXML::CONFIG_NOWARN = 1;    # HACK!!
-    loadConfigFile($config, 'LaTeXML'); }
-  # Invoke the configuration (multiple yaml docs) implied by command-line options
+  loadConfigFile($config, 'LaTeXML');
+  # Could load a user-configuration file?
+
+  # Now invoke the configuration (multiple yaml docs) implied by command-line options
   mergeConfig($config, YAML::Tiny->read_string($options));
   return $config; }
 
@@ -165,9 +191,8 @@ sub loadConfigFile {
 # Merge the $yaml data into $config
 sub mergeConfig {
   my ($config, $yaml) = @_;
-#  print "Merging from ".Dumper($yaml)."\n";
-  if(! $yaml){
-      warn "Yaml error: ".YAML::Tiny->errstr."\n"; }
+  if (!$yaml) {
+    warn "Yaml error: " . YAML::Tiny->errstr . "\n"; }
   foreach my $ydoc (@$yaml) {    # foreach yaml "document"
     foreach my $name (keys %$ydoc) {
       my $value = $$ydoc{$name};
@@ -178,58 +203,88 @@ sub mergeConfig {
 
 sub mergeValue {
   my ($config, $value, @keys) = @_;
-  my $object  = $config;
-  my @context = @keys[0 .. $#keys - 1];
-  my $key     = $keys[-1];
-  map { $object = $object && $$object{$_} } @context;
-  my $prev     = $$object{$key};
-  my $prevtype = ref $prev;
-  my $type     = ref $value;
-  configWarning("Unknown key (possible typo?)", $value, @keys)
-
-    if !$LaTeXML::CONFIG_NOWARN && (!$object || !exists $$object{$key});
-  if (!$prev || !$prevtype) {
-    $$object{$key} = $value; }
-  elsif ($prevtype eq 'HASH') {
-    if ($type eq 'HASH') {
+  my $object = configLookup($config, @keys[0 .. $#keys - 1]);
+  my $key    = $keys[-1];
+  my $prev   = $$object{$key};
+  my $struct = 'scalar';    # the type of structure to maintain in $config: HASH, ARRAY, scalar
+  if ($keys[0] eq 'definition') {
+    # Possible type-checking of type specifiers?
+    $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
+  elsif (my $type = configLookup($config, 'definition', @keys)) {
+    # $type can be hash for intermediate levels, else a declared type.
+    $struct = (ref $type) || ($type =~ /^list\[/ ? 'ARRAY' : 'scalar');
+    return if (!ref $type) && !configCheckType($type, $value, @keys); }
+  else {
+    configWarning("Unknown key (possible typo?)", $value, @keys);
+    return; }
+  if ($struct eq 'HASH') {
+    $$object{$key} = {} unless $prev;           # initialize if needed
+    if (!defined $value) { }
+    elsif (ref $value eq 'HASH') {
       map { mergeValue($config, $$value{$_}, @keys, $_) } keys %$value; }
     else {
-      configWarning("Cannot merge value of type $type into mapping", $value, @keys); } }
-  elsif ($prevtype eq 'ARRAY') {
-    push(@{ $$object{$key} }, ($type eq 'ARRAY' ? @$value : $value)); }
+      configWarning("Cannot merge value into mapping", $value, @keys); } }
+  elsif ($struct eq 'ARRAY') {
+    $$object{$key} = [] unless $prev;           # initialize if needed
+    if (defined $value) {
+      push(@{ $$object{$key} }, (ref $value eq 'ARRAY' ? @$value : $value)); } }
   else {
-    configWarning("Not sure what $prev (of type $prevtype) is doing in configuration"); } }
+    $$object{$key} = $value; } }
+
+# sorta like $$config{key1}{key2}...{keyn}
+sub configLookup {
+  my ($config, @keys) = @_;
+  my $object = $config;
+  map { $object = $object && $$object{$_} } @keys;
+  return $object; }
+
+# This could evolve to return the "normalized" $value?
+sub configCheckType {
+  my ($type, $value, @keys) = @_;
+  # pathname, boolean, int, string, phasename, classname, date
+  # or list[$type], hash[$ignored], choice[lit1,lit2...]
+  if    ($type eq 'boolean') { return 1 if $value =~ /^(?:true|false)$/; }
+  elsif ($type eq 'int')     { return 1 if $value =~ /^(?:\+|\-)?\d+$/; }
+  elsif ($type eq 'string')  { return 1; }
+  elsif ($type eq 'pathname')  { return 1; }
+  elsif ($type eq 'classname') { return 1 if $value =~ /^(\w+)(?:\:\:\w+)*$/; }
+  elsif ($type eq 'phasename') { return 1 if grep { $value eq $_ } @PHASES; }
+  elsif ($type eq 'date') { return 1 if $value =~ /^\d{4}-\d{2}-\d{2}$/; }
+  elsif ($type =~ /^list\[(\w+)\]$/) {
+    my $subtype = $1;
+    if (((ref $value) || '') eq 'ARRAY') {
+      return 1 if !grep { !configCheckType($subtype, $_, @keys) } @$value; }
+    else {
+      return 1 if configCheckType($subtype, $value, @keys); } }
+  elsif ($type =~ /^hash\[(\w*)\]$/) {
+    # No checking of internal structure of the hash ... YET!
+    return 1 if ((ref $value) || '') eq 'HASH'; }
+  elsif ($type =~ /^choice\[(.*)\]$/) {
+    my @choices = split(/\s*,\s*/, $1);
+    return 1 if grep { $value eq $_ } @choices; }
+  else {
+    configWarning("Unknown type $type", $value, @keys);
+    return 0; }
+  configWarning("Value not of type $type", $value, @keys);
+  return 0; }
 
 sub configWarning {
   my ($message, $value, @keys) = @_;
-  warn "Config warning in $LaTeXML::CONFIG_FILE: $message\n"
+  warn "Config warning in " . ($LaTeXML::CONFIG_FILE || 'commandline options') . ": $message\n"
     . " for " . join('->', @keys) . " = $value\n"; }
+
 #======================================================================
-our @PHASES;
-
-BEGIN {
-  # Try to condense this a bit more? (using sensible "position" values to sort within categories)
-  # And, not yet configurable either!!
-  @PHASES = (qw(
-      digestion
-      splitting
-      scanning
-      fillingin
-      crossreferencing
-      graphicstranslation
-      mathtranslation
-      xslt
-      packaging));
-}
-
+# Analyzing the resulting configuration to generate a Processing Plan
+# Note current code doesn't support this level of abstraction,
+# although it is similar to the post-processing chain.
 sub makePlan {
   my ($config) = @_;
   print "Global: " . minidump($$config{global}) . "\n";
   print "Daemon: " . minidump($$config{daemon}) . "\n";
   my @processors = ();
   foreach my $phase (@PHASES) {
-    my @p = sort { $$config{$a}{position} <=> $$config{$b}{position} }
-      grep { (($$config{$_}{phase}||'') eq $phase) && (($$config{$_}{enabled}||'') eq 'true') }
+    my @p = sort { ($$config{$a}{position} || 0) <=> ($$config{$b}{position} || 0) }
+      grep { (($$config{$_}{phase} || '') eq $phase) && (($$config{$_}{enabled} || '') eq 'true') }
       keys %$config;
     push(@processors, @p); }
   print "Processing plan:\n";
@@ -237,17 +292,18 @@ sub makePlan {
     print "$p : " . minidump($$config{$p}) . "\n"; }
 }
 
+# Just for debugging the plan construction...
 sub minidump {
-  return wrap("","         ",minidump_aux($_[0])); }
+  return wrap("", "         ", minidump_aux($_[0])); }
 
 sub minidump_aux {
   my ($value) = @_;
-  my $type = ref $value;
-  if (!$type) {
+  my $ref = ref $value;
+  if (!$ref) {
     return (defined $value ? $value : 'undef'); }
-  elsif ($type eq 'HASH') {
+  elsif ($ref eq 'HASH') {
     return '{' . join(', ', map { $_ . '=>' . minidump($$value{$_}) } sort keys %$value) . '}'; }
-  elsif ($type eq 'ARRAY') {
+  elsif ($ref eq 'ARRAY') {
     return '[' . join(', ', map { minidump($_) } @$value) . ']'; } }
 
 #======================================================================
