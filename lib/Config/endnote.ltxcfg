@@ -1,0 +1,11 @@
+definition:
+  endnote:
+    phase   : phasename
+    enabled : boolean
+    class   : classname
+---    
+endnote:
+  phase   : crossreferencing
+  enabled : true
+  class   : LaTeXML::Plugin::Endnote
+  
