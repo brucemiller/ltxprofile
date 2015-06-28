@@ -1,0 +1,43 @@
+#  -*- mode:yaml -*-
+provides:
+  - The base configuration for TeX to XML processing by LaTeXML
+  - Definitions of all core processors in the "digest" phase
+
+dependencies:
+ - LaTeXML_base
+
+defines:
+  digest:
+    phase: digestion
+    class: LaTeXML::Core
+    defaults:
+      includestyles: false
+      inputencoding: ""
+  bib:
+    input-extension: bib
+    preload: BibTeX.pool.ltxml
+    after:
+      - digest
+    
+  rewrite:
+    phase: digestion
+    class: LaTeXML::Core::Rewrite
+    after:
+      - digest
+
+  mathparser:
+    phase: digestion
+    class: LaTeXML::MathParser
+    after:
+      - rewrite
+    defaults:
+      engine: Parse::RecDescent
+      grammar: MathGrammar
+
+defaults:
+  rewrite: enabled
+  mathparser: enabled
+
+requires:
+  digest: enabled
+  preload: TeX.pool.ltxml
