@@ -59,8 +59,7 @@ sub load_profile {
     $definitions->{$processor} = {} unless defined $definitions->{$processor};
     my $defs_processor = $definitions->{$processor};
     foreach my $pk (keys %{$cfg->{definitions}->{$processor}}) {
-      $defs_processor->{$pk} = $cfg->{definitions}->{$processor}->{$pk}; } 
-    print STDERR " Done with processor.\n"; }
+      $defs_processor->{$pk} = $cfg->{definitions}->{$processor}->{$pk}; } }
   # 4. Process "requires". On collisions, overwrite values.
   foreach my $key (keys %{$cfg->{requires} || {}}) {
     $cfg_opts->{$key} = $cfg->{requires}->{$key}; }
