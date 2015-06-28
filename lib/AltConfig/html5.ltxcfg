@@ -1,0 +1,13 @@
+#  -*- mode:yaml -*-
+provides: 
+ - A HTML5 output format configuration for LaTeXML post-processing
+dependencies:
+ - LaTeXML-post
+
+defaults:
+  pmml: enabled
+  picturesvg: enabled
+
+requires:
+  xslt: enabled
+  stylesheet: LaTeXML-html5.xsl
