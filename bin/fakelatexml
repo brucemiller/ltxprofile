@@ -33,9 +33,15 @@ my @options = ();
 sub add { push(@options, @_); }
 sub Boole { return ($_[0] ? 'true' : 'false'); }
 my $spec = {
-  "output=s"      => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
-  "destination=s" => sub { add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
-  "base=s"        => sub { add("global:\n  basedir: '$_[1]'"); },                 # diff from sitedir?
+  "output=s"      => sub {
+    if($_[1] =~ /\.(\w+)$/){
+      add("includeif: '$1'"); }
+    add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
+  "destination=s" => sub {
+    if($_[1] =~ /\.(\w+)$/){
+      add("includeif: '$1'"); }
+    add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
+  "base=s"        => sub { add("global:\n  basedir: '$_[1]'"); }, # diff from sitedir?
   "log=s"         => sub { add("global:\n  log: '$_[1]'"); },
   "path=s"        => sub { add("global:\n  paths:\n  -'$_[1]'"); },
   "strict"        => sub { add("global:\n  strict: true"); },
@@ -132,9 +138,10 @@ GetOptions(%$spec);
 my $source = $ARGV[0];
 
 # Add a couple of special case options
-if (!$sawformat && $destination && ($destination =~ /\.(\w+)$/)) {
-  unshift(@options, "include: $1"); }
-# Load configuration implied by input & output formats
+# If format explicitly given, remove "includif: $format" from @options
+if ($sawformat){
+  @options = grep { $_ !~ /^includeif:/ } @options; }
+# Load configuration implied by input & output formats.
 if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
   unshift(@options, "include: $1"); }
 unshift(@options, "global:\n  verbosity: $verbosity") if $verbosity;
@@ -178,15 +185,16 @@ sub LoadConfiguration {
   return $config; }
 
 sub loadConfigFile {
-  my ($config, $source) = @_;
+  my ($config, $source, $iffound) = @_;
   local $LaTeXML::CONFIG_FILE = $source;
   # Eventually search for config files
   my $path = $CONFIGDIR . '/' . $source . '.ltxcfg';
   if (-f $path) {
     print "Loading configuration $source ($path)\n";
     mergeConfig($config, YAML::Tiny->read($path)); }
-  else {
-    warn "Missing config file $path\n"; } }
+  elsif (!$iffound) {
+    warn "Missing config file $path\n"; }
+  applyDefaults($config,$$config{defaults}); }
 
 # Merge the $yaml data into $config
 sub mergeConfig {
@@ -198,6 +206,8 @@ sub mergeConfig {
       my $value = $$ydoc{$name};
       if ($name eq 'include') {
         loadConfigFile($config, $value); }
+      elsif ($name eq 'includeif') { # but we shouldn't make an error...
+        loadConfigFile($config, $value, 1); }
       else {
         mergeValue($config, $value, $name); } } } }
 
@@ -207,8 +217,12 @@ sub mergeValue {
   my $key    = $keys[-1];
   my $prev   = $$object{$key};
   my $struct = 'scalar';    # the type of structure to maintain in $config: HASH, ARRAY, scalar
+  # definition block gets special treatmen
   if ($keys[0] eq 'definition') {
     # Possible type-checking of type specifiers?
+    $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
+  # defaults block also
+  elsif ($keys[0] eq 'defaults') { # Just merge into defaults tree, no type checking(?)
     $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
   elsif (my $type = configLookup($config, 'definition', @keys)) {
     # $type can be hash for intermediate levels, else a declared type.
@@ -230,6 +244,18 @@ sub mergeValue {
       push(@{ $$object{$key} }, (ref $value eq 'ARRAY' ? @$value : $value)); } }
   else {
     $$object{$key} = $value; } }
+
+sub applyDefaults {
+  my ($config, $default, @keys) = @_;
+  my $object = configLookup($config, @keys[0 .. $#keys - 1]);
+  my $key    = $keys[-1];
+  my $exists = $key && ! exists $$object{$key};
+  if(ref $default eq 'HASH'){     # if hash, we're still descending.
+    $$object{$key} = {} if $exists; # initialize if needed.
+    map { applyDefaults($config, $$default{$_}, @keys, $_) } keys %$default; }
+  elsif($exists){
+    $$object{$key} = $default; }  # No previous value, assign default.
+  return; }
 
 # sorta like $$config{key1}{key2}...{keyn}
 sub configLookup {
