@@ -1,9 +1,10 @@
 #  -*- mode:yaml -*-
 include: post
-pmml:
-  enabled: true
-picturesvg:
-  enabled: true
+defaults:
+  pmml:
+    enabled: true
+  picturesvg:
+    enabled: true
 xslt:
   enabled: true
   stylesheet: LaTeXML-xhtml.xsl

@@ -1,8 +1,9 @@
 #  -*- mode:yaml -*-
 # Enable basic digestion TeX->XML
-digest:
-  enabled: true
-rewrite :
-  enabled: true
-mathparser :
-  enabled: true
+defaults:
+  digest:
+    enabled: true
+  rewrite :
+    enabled: true
+  mathparser :
+    enabled: true

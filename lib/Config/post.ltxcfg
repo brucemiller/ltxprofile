@@ -1,16 +1,19 @@
 #  -*- mode:yaml -*-
 # Enable common PostProcessors
+# (but using defaults, so they can be conveniently disabled individually)
 # A specific format should also enable the appropriate
 # math & picture handling, as well as xslt
-scan:
-  enabled: true
-crossref:
-  enabled: true
-bibliography:
-  enabled: true
-index:
-  enabled: true
-graphics:
-  enabled: true
-writer:
-  enabled: true
+# 
+defaults:
+  scan:
+    enabled: true
+  crossref:
+    enabled: true
+  bibliography:
+    enabled: true
+  index:
+    enabled: true
+  graphics:
+    enabled: true
+  writer:
+    enabled: true
