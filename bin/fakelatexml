@@ -29,100 +29,121 @@ my $destination;
 my $opts = {};    # not-yet-handled options.
 # NOTE: Need provision for checking for allowed values of certain parameters?
 #  Handled during command-line processing? during config parsing? during instanciation?
+my $nmaths = 0;
 my @options = ();
-sub add { push(@options, @_); }
+sub inc { push(@options, 'include: '.$_[0]); }
+sub incif { push(@options, 'includeif: '.$_[0]); }
+sub set {
+  my($key,$value)=@_;
+  my @keys = ('settings',split(':', $key));
+  push(@options,join("\n", map { (' 'x$_).$keys[$_].':' } 0..$#keys).' '.$value); }
+
 sub Boole { return ($_[0] ? 'true' : 'false'); }
 my $spec = {
   "output=s"      => sub {
-    if($_[1] =~ /\.(\w+)$/){
-      add("includeif: '$1'"); }
-    add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
+    $destination = $_[1];
+    if($destination =~ /\.(\w+)$/){ incif($1); }
+    set("global:destination: '$_[1]'");; },
   "destination=s" => sub {
-    if($_[1] =~ /\.(\w+)$/){
-      add("includeif: '$1'"); }
-    add("global:\n  destination: '$_[1]'"); $destination = $_[1]; },
-  "base=s"        => sub { add("global:\n  basedir: '$_[1]'"); }, # diff from sitedir?
-  "log=s"         => sub { add("global:\n  log: '$_[1]'"); },
-  "path=s"        => sub { add("global:\n  paths:\n  -'$_[1]'"); },
-  "strict"        => sub { add("global:\n  strict: true"); },
-  "validate!"     => sub { add("global:\n   validate: " . Boole($_[1])); },
-  "preload=s"     => sub { add("digest:\n  preload: '$_[1]'"); },
-  "preamble=s"    => sub { add("digest:\n  preamble: '$_[1]'"); },
-  "postamble=s"   => sub { add("digest:\n  postamble: '$_[1]'"); },
-  "comments!"     => sub { add("digest:\n  includecomments: " . Boole($_[1])); },
-  "documentid=s"  => sub { add("digest:\n  documentid: '$_[1]'"); },
-  "includestyles" => sub { add("digest:\n  includestyles: true"); },
-  "inputencoding=s" => sub { add("digest:\n  inputencoding : '$_[1]'"); },
-  "xml"             => sub { add("include: xml"); $sawformat = 1; },
-  "tex"             => sub { add("include: tex"); $sawformat = 1; },         # TeX OUTPUT!!!!
-  "box"             => sub { add("include: box"); $sawformat = 1; },
-  "format=s"        => sub { add("include: $_[1]"); $sawformat = 1; },
-  "bibtex"          => sub { add("include: bib"); $sawinputformat = 1; },
-  "profile=s"       => sub { add("include: '$_[1]'"); },
-  "mode=s"          => sub { add("include: '$_[1]'"); },                     # alias
-  "noparse"         => sub { add("mathparser:\n  enabled: false"); },
-  "parse=s" => sub { add("mathparser:\n  enabled: true\n  engine: '$_[1]'"); },
+    $destination = $_[1];
+    if($destination =~ /\.(\w+)$/){ incif($1); }
+    set('global:destination',$_[1]); },
+  "base=s"        => sub { set('global:basedir',$_[1]); }, # diff from sitedir?
+  "log=s"         => sub { set('global:log',$_[1]); },
+  "path=s"        => sub { set('global:paths',$_[1]); },
+  "strict"        => sub { set('global:strict','true'); },
+  "validate!"     => sub { set('global:validate', Boole($_[1])); },
+  "preload=s"     => sub { set('digest:preload',$_[1]); },
+  "preamble=s"    => sub { set('digest:preamble',$_[1]); },
+  "postamble=s"   => sub { set('digest:postamble',$_[1]); },
+  "comments!"     => sub { set('digest:includecomments',Boole($_[1])); },
+  "documentid=s"  => sub { set('digest:documentid',$_[1]); },
+  "includestyles" => sub { set('digest:includestyles','true'); },
+  "inputencoding=s" => sub { set('digest:inputencoding',$_[1]); },
+  "xml"             => sub { inc('xml'); $sawformat = 1; },
+  "tex"             => sub { inc('tex'); $sawformat = 1; },         # TeX OUTPUT!!!!
+  "box"             => sub { inc('box'); $sawformat = 1; },
+  "format=s"        => sub { inc($_[1]); $sawformat = 1; },
+  "bibtex"          => sub { inc('bib'); $sawinputformat = 1; },
+  "profile=s"       => sub { inc($_[1]); },
+  "mode=s"          => sub { inc($_[1]); },                     # alias
+  "noparse"         => sub { set('mathparser:enabled', 'false'); },
+  "parse=s" => sub { set('mathparser:enabled', 'true');
+		     set('mathparser:engine',$_[1]); },
   "cache_key=s"              => \$$opts{cache_key},                                         # ?
   "source=s"                 => \$$opts{source},                                            # ?
-  "embed"                    => sub { add("packager:\n whatsout: fragment"); },
-  "whatsin=s"                => sub { add("global:\n  whatsin: '$_[1]'"); },                # global??
-  "whatsout=s"               => sub { add("packager:\n whatsout: '$_[1]'"); },
-  "autoflush=i"              => sub { add("daemon:\n   input_limit: '$_[1]'"); },
-  "timeout=i"                => sub { add("daemon:\n   timeout: '$_[1]'"); },
-  "expire=i"                 => sub { add("daemon:\n   expire: '$_[1]'"); },
-  "address=s"                => sub { add("daemon:\n   address: '$_[1]'"); },
-  "port=i"                   => sub { add("daemon:\n   port: '$_[1]'"); },
-  "post!"                    => sub { add("include: post"); },
-  "omitdoctype!"             => sub { add("writer:\n   omitdoctype: " . Boole($_[1])); },
-  "mathimages!"              => sub { add("mathimages:\n   enabled: " . Boole($_[1])); },
-  "mathimagemagnification=f" => sub { add("mathimages:\n   magnification: '$_[1]'"); },
-  "mathsvg!"                 => sub { add("mathsvg:\n   enabled: " . Boole($_[1])); },
-  "linelength=i"             => sub { add("pmml:\n   linelength: $_[1]"); },
-  "plane1!"                  => sub { add("pmml:\n   plane1: " . Boole($_[1])); },
-  "hackplane1!"              => sub { add("pmml:\n   hackplane1: " . Boole($_[1])); },
-  "presentationmathml|pmml!" => sub { add("pmml:\n   enabled: " . Boole($_[1])); },
-  "contentmathml|cmml!"      => sub { add("cmml:\n   enabled: " . Boole($_[1])); },
-  "openmath|om!"             => sub { add("om:\n   enabled: " . Boole($_[1])); },
-  "keepXMath!"               => sub { add("xmath:\n   enabled: " . Boole($_[1])); },
-  "mathtex!"                 => sub { add("mathtex:\n   enabled: " . Boole($_[1])); },
-  "stylesheet=s" => sub { add("xslt:\n  enabled: true\n  stylesheet: '$_[1]'"); },
-  "xsltparameter=s"   => sub { add("xslt:\n  enabled: true\n  parameters:\n - '$_[1]'"); },
-  "timestamp=s"       => sub { add("xslt:\n  timestamp: '$_[1]'"); },
-  "defaultresources!" => sub { add("xslt:\n  defaultresources: " . Boole($_[1])); },
-  "css=s"             => sub { add("xslt:\n  css:\n  - '$_[1]'"); },
-  "javascript=s"      => sub { add("xslt:\n  javascript:\n  - '$_[1]'"); },
-  "icon=s"            => sub { add("xslt:\n  icon: '$_[1]'"); },
-  "split!"            => sub { add("split:\n  enabled: " . Boole($_[1])); },
-  "splitat=s"         => sub { my $path = $splitpaths{ $_[1] };
+  "embed"                    => sub { set('packager:whatsout','fragment'); },
+  "whatsin=s"                => sub { set('global:whatsin',$_[1]); },                # global??
+  "whatsout=s"               => sub { set('packager:whatsout',$_[1]); },
+  "autoflush=i"              => sub { set('daemon:input_limit',$_[1]); },
+  "timeout=i"                => sub { set('daemon:timeout',$_[1]); },
+  "expire=i"                 => sub { set('daemon:expire',$_[1]); },
+  "address=s"                => sub { set('daemon:address',$_[1]); },
+  "port=i"                   => sub { set('daemon:port',$_[1]); },
+  "post!"                    => sub { inc('post'); },
+  "omitdoctype!"             => sub { set('writer:omitdoctype', Boole($_[1])); },
+  "mathimages!"              => sub { set('mathimages:enabled', Boole($_[1])); },
+  "mathimagemagnification=f" => sub { set('mathimages:magnification',$_[1]); },
+  "mathsvg!"                 => sub { set('mathsvg:enabled', Boole($_[1])); },
+  "linelength=i"             => sub { set('pmml:linelength', $_[1]); },
+  "plane1!"                  => sub { set('pmml:plane1', Boole($_[1])); },
+  "hackplane1!"              => sub { set('pmml:hackplane1', Boole($_[1])); },
+  "presentationmathml|pmml!" => sub { set('pmml:enabled',Boole($_[1]));
+				      set('pmml:position', $nmaths++) if $_[1]; },
+  "contentmathml|cmml!"      => sub { set('cmml:enabled',Boole($_[1]));
+				      set('cmml:position', $nmaths++) if $_[1]; },
+  "openmath|om!"             => sub { set('om:enabled', Boole($_[1]));
+				      set('om:position', $nmaths++) if $_[1]; },
+  "keepXMath!"               => sub { set('xmath:enabled', Boole($_[1]));
+				      set('xmath:position', $nmaths++) if $_[1]; },
+  "mathtex!"                 => sub { set('mathtex:enabled', Boole($_[1]));
+				      set('mathtex:position', $nmaths++) if $_[1]; },
+  "stylesheet=s"             => sub { set('xslt:enabled','true');
+				      set('xslt:stylesheet', $_[1]); },
+  "xsltparameter=s"   => sub { set('xslt:enabled','true');
+			       set('xslt:parameters',$_[1]); },
+  "timestamp=s"       => sub { set('xslt:timestamp',$_[1]); },
+  "defaultresources!" => sub { set('xslt:defaultresources', Boole($_[1])); },
+  "css=s"             => sub { set('xslt:css',$_[1]); },
+  "javascript=s"      => sub { set('xslt:javascript',$_[1]); },
+  "icon=s"            => sub { set('xslt:icon', $_[1]); },
+  "split!"            => sub { set('split:enabled', Boole($_[1])); },
+	    "splitat=s"         => sub {
+	      my $path = $splitpaths{ $_[1] };
     configWarning("Value not in [" . join(',', keys %splitpaths) . "]",
       $_[1], 'split', 'splitat') unless $path;
-    add("split:\n  enabled: true\n  splitpath: '$path'"); },
-  "splitpath=s"   => sub { add("split:\n  enabled: true\n  splitpath: '$_[1]'"); },
-  "splitnaming=s" => sub { add("split:\n  enabled: true\n  splitnaming: '$_[1]'"); },
-  "scan!"         => sub { add("scan:\n  enabled: true"); },
-  "prescan"    => sub { add("scan:\n  enabled: true"); },           # AND disable other post!!!
-  "crossref!"  => sub { add("crossref:\n  enabled: true"); },
-  "urlstyle=s" => sub { add("crossref:\n  urlstyle: '$_[1]'"); },
-  "navigationtoc|navtoc=s" => sub { add("crossref { navigation_toc: '$_[1]'"); },
-  "numbersections!"        => sub { add("crossref:\n   numbersections: " . Boole($_[1])); },
-  "index!"                 => sub { add("index:\n   enabled: " . Boole($_[1])); },
-  "permutedindex!"         => sub { add("index:\n   permuted: true"); },
-  "splitindex!"            => sub { add("index:\n   split: " . Boole($_[1])); },
-  "bibliography=s"         => sub { add("bib:\n   bibliographies:\n  - '$_[1]'"); },
-  "nobibliography"         => sub { add("bib:\n   enabled: false"); },
-  "splitbibliography!"     => sub { add("bib:\n   split: " . Boole($_[1])); },
-  "dbfile=s"               => sub { add("global:\n   dbfile: '$_[1]'"); },
-  "sitedirectory=s"        => sub { add("global:\n   sitedirectory: '$_[1]'"); },
-  "resourcedirectory=s"    => sub { add("global:\n   resourcedirectory: '$_[1]'"); },
-  "sourcedirectory=s"      => sub { add("global:\n   sourcedir: '$_[1]'\n"); },
-  "graphicimages!"         => sub { add("graphics:\n   enabled: " . Boole($_[1])); },
+    set('split:enabled','true');
+    set('split:splitpath',$path); },
+  "splitpath=s"   => sub { set('split:enabled','true');
+			   set('split:splitpath',$_[1]); },
+  "splitnaming=s" => sub { set('split:enabled','true');
+			   set('split:splitnaming',$_[1]); },
+  "scan!"         => sub { set('scan:enabled', 'true'); },
+  "prescan"    => sub { set("scan:enabled', true"); },           # AND disable other post!!!
+  "crossref!"  => sub { set('crossref:enabled','true'); },
+  "urlstyle=s" => sub { set('crossref:urlstyle',$_[1]); },
+  "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc',$_[1]); },
+  "numbersections!"        => sub { set('crossref:numbersections', Boole($_[1])); },
+  "index!"                 => sub { set('index:enabled', Boole($_[1])); },
+  "permutedindex!"         => sub { set('indexpermuted','true'); },
+  "splitindex!"            => sub { set('indexsplit', Boole($_[1])); },
+  "bibliography=s"         => sub { set('bibbibliographies', $_[1]); },
+  "nobibliography"         => sub { set('bib:enabled', 'false'); },
+  "splitbibliography!"     => sub { set('bib:split', Boole($_[1])); },
+  "dbfile=s"               => sub { set('global:dbfile',$_[1]); },
+  "sitedirectory=s"        => sub { set('global:sitedirectory',$_[1]); },
+  "resourcedirectory=s"    => sub { set('global:resourcedirectory',$_[1]); },
+  "sourcedirectory=s"      => sub { set('globalsourcedir',$_[1]); },
+  "graphicimages!"         => sub { set('graphicsenabled', Boole($_[1])); },
   "graphicsmap=s" => sub {    # graphicsmap=srctype.desttype
     my ($src, $dest) = split(/\./, $_[1]);
     $dest = $src unless $dest;
-    add("graphics:\n  graphics_types: $src\n"
-        . "  type_properties:\n    $src:\n      destination_type: $dest"); },
-  "svg!"           => sub { add("picturesvg:\n   enabled: " . Boole($_[1])); },
-  "pictureimages!" => sub { add("pictureimages:\n   enabled: " . Boole($_[1])); },
+    set('graphics:graphics_types', $src);
+### Need fancy identation!!
+#####    set('graphics:type_properties"  $src:\n        destination_type: $dest");
+ },
+  "svg!"           => sub { set('picturesvg:enabled', Boole($_[1])); },
+  "pictureimages!" => sub { set('pictureimages: enabled', Boole($_[1])); },
   # HELP
 
   "quiet"   => sub { $verbosity--; },
@@ -144,7 +165,7 @@ if ($sawformat){
 # Load configuration implied by input & output formats.
 if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
   unshift(@options, "include: $1"); }
-unshift(@options, "global:\n  verbosity: $verbosity") if $verbosity;
+unshift(@options, "settings: global:\n    verbosity: $verbosity") if $verbosity;
 
 #======================================================================
 my $yoptions = join("\n---\n", @options) . "\n";
@@ -182,6 +203,14 @@ sub LoadConfiguration {
 
   # Now invoke the configuration (multiple yaml docs) implied by command-line options
   mergeConfig($config, YAML::Tiny->read_string($options));
+  # Special case for mathtranslation
+  my @m = grep { (($$config{settings}{$_}{phase}||'') eq 'mathtranslation') }
+    keys %{$$config{settings}};
+  # If we have enabled mathtranslations, remove enabled from defaults before applying
+  if(grep { (($$config{settings}{$_}{enabled}||'') eq 'true') } @m){
+    map { $$config{defaults}{$_}{enabled} = 'false' } @m; }
+
+  applyDefaults($config,$$config{defaults});
   return $config; }
 
 sub loadConfigFile {
@@ -193,8 +222,7 @@ sub loadConfigFile {
     print "Loading configuration $source ($path)\n";
     mergeConfig($config, YAML::Tiny->read($path)); }
   elsif (!$iffound) {
-    warn "Missing config file $path\n"; }
-  applyDefaults($config,$$config{defaults}); }
+    warn "Missing config file $path\n"; } }
 
 # Merge the $yaml data into $config
 sub mergeConfig {
@@ -224,7 +252,7 @@ sub mergeValue {
   # defaults block also
   elsif ($keys[0] eq 'defaults') { # Just merge into defaults tree, no type checking(?)
     $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
-  elsif (my $type = configLookup($config, 'definition', @keys)) {
+  elsif (my $type = configLookup($config, 'definition', @keys[1..$#keys])) {
     # $type can be hash for intermediate levels, else a declared type.
     $struct = (ref $type) || ($type =~ /^list\[/ ? 'ARRAY' : 'scalar');
     return if (!ref $type) && !configCheckType($type, $value, @keys); }
@@ -247,7 +275,7 @@ sub mergeValue {
 
 sub applyDefaults {
   my ($config, $default, @keys) = @_;
-  my $object = configLookup($config, @keys[0 .. $#keys - 1]);
+  my $object = configLookup($config, 'settings', @keys[0 .. $#keys - 1]);
   my $key    = $keys[-1];
   my $exists = $key && ! exists $$object{$key};
   if(ref $default eq 'HASH'){     # if hash, we're still descending.
@@ -305,17 +333,18 @@ sub configWarning {
 # although it is similar to the post-processing chain.
 sub makePlan {
   my ($config) = @_;
-  print "Global: " . minidump($$config{global}) . "\n";
-  print "Daemon: " . minidump($$config{daemon}) . "\n";
+  my $settings = $$config{settings};
+  print "Global: " . minidump($$settings{global}) . "\n";
+  print "Daemon: " . minidump($$settings{daemon}) . "\n";
   my @processors = ();
   foreach my $phase (@PHASES) {
-    my @p = sort { ($$config{$a}{position} || 0) <=> ($$config{$b}{position} || 0) }
-      grep { (($$config{$_}{phase} || '') eq $phase) && (($$config{$_}{enabled} || '') eq 'true') }
-      keys %$config;
+    my @p = sort { ($$settings{$a}{position} || 0) <=> ($$settings{$b}{position} || 0) }
+      grep { (($$settings{$_}{phase} || '') eq $phase) && (($$settings{$_}{enabled} || '') eq 'true') }
+      keys %$settings;
     push(@processors, @p); }
   print "Processing plan:\n";
   foreach my $p (@processors) {
-    print "$p : " . minidump($$config{$p}) . "\n"; }
+    print "$p : " . minidump($$settings{$p}) . "\n"; }
 }
 
 # Just for debugging the plan construction...
