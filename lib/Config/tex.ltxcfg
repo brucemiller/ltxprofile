@@ -1,4 +1,5 @@
 #  -*- mode:yaml -*-
+# tex.ltxcfg
 # Enable basic digestion TeX->XML
 defaults:
   digest:

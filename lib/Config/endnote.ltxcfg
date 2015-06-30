@@ -1,11 +1,14 @@
+#  -*- mode:yaml -*-
+# endnote.ltxcfg
+# Hypothetical plugin supporting endnotes
 definition:
   endnote:
     phase   : phasename
     enabled : boolean
     class   : classname
 ---    
-endnote:
-  phase   : crossreferencing
-  enabled : true
-  class   : LaTeXML::Plugin::Endnote
-  
+defaults:
+  endnote:
+    phase   : crossreferencing
+    enabled : true
+    class   : LaTeXML::Plugin::Endnote

@@ -1,5 +1,7 @@
 #  -*- mode:yaml -*-
-# Enable basic digestion BibTeX->XML
+# bib.ltxcfg
+# Enable basic digestion of BibTeX -> TeX ->XML
 include: tex
-bibtex:
-  enabled: true
+defaults:
+  bibtex:
+    enabled: true

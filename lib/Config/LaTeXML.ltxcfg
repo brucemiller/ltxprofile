@@ -1,6 +1,7 @@
 #  -*- mode:yaml -*-
 # LaTeXML.ltxprofile
 ---
+# Definitions of all core processing modules
 definition:
   global:
     destination: pathname
@@ -169,98 +170,101 @@ definition:
     class:      classname
     whatsout:   string
 ---
-global:
-  destination:
-  log: STDERR
-  verbosity: 0
-daemon:
+# Since this is loaded before everything, including command line options
+# it can be equivalently defaults or settings
+settings:
+  global:
+    destination:
+    log: STDERR
+    verbosity: 0
+  daemon:
 
-# Core set of processors; all disabled by default
-bibtex:
-  phase:         digestion
-  position:      -10
-  input-extension: bib
-  pool:          BibTeX.pool.ltxml
-digest :
-  phase:         digestion
-  class:         LaTeXML::Core
-rewrite :
-  phase:         digestion
-  position:      10
-  class:         LaTeXML::Core::Rewrite
-mathparser :
-  phase:         digestion
-  position:      20
-  class:         LaTeXML::MathParser
-  engine:        Parse::RecDescent
-  grammar:       MathGrammar
-split:
-  phase:         splitting
-  class:         LaTeXML::Post::Split
-scan:
-  phase:         scanning
-  class:         LaTeXML::Post::Scan
-bibliography :
-  phase:         crossreferencing
-  class:         LaTeXML::Post::MakeBibliography
-  bibliography:  []
-index :
-  phase:         crossreferencing
-  class:         LaTeXML::Post::MakeIndex
-  permuted:      false
-crossref:
-  phase:         crossreferencing
-  position:      100
-  class:         LaTeXML::Post::CrossRef
-mathimages:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::MathImages
-  format:        png
-  magnification: 1
-mathsvg:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::MathImages
-  format:        svg
-pmml:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::MathML::Presentation
-  plane1:        true
-cmml:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::MathML::Content
-  mode:          pragmatic
-om:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::OpenMath
-xmath:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::XMath
-mathtex:
-  phase:         mathtranslation
-  class:         LaTeXML::Post::TeXMath
-graphics:
-  phase:         graphicstranslation
-  class:         LaTeXML::Post::Graphics
-#  maps:          []
-picturesvg:
-  phase:         graphicstranslation
-  class:         LaTeXML::Post::SVG
-pictureimages:
-  phase:         graphicstranslation
-  class:         LaTeXML::Post::PictureImages
-xslt  :
-  phase:         xslt
-  class:         LaTeXML::Post::XSLT
-  defaultresources: true
-writer :
-  phase:         packaging
-  class:         LaTeXML::Post::Writer
-manifest:
-  phase:         packaging
-  position:      10
-  class:         LaTeXML::Post::Manifest
-packager:
-  phase:         packaging
-  position:      20
+  # Core set of processors; implicitly disabled by default
+  bibtex:
+    phase:         digestion
+    position:      -10
+    input-extension: bib
+    pool:          BibTeX.pool.ltxml
+  digest :
+    phase:         digestion
+    class:         LaTeXML::Core
+  rewrite :
+    phase:         digestion
+    position:      10
+    class:         LaTeXML::Core::Rewrite
+  mathparser :
+    phase:         digestion
+    position:      20
+    class:         LaTeXML::MathParser
+    engine:        Parse::RecDescent
+    grammar:       MathGrammar
+  split:
+    phase:         splitting
+    class:         LaTeXML::Post::Split
+  scan:
+    phase:         scanning
+    class:         LaTeXML::Post::Scan
+  bibliography :
+    phase:         crossreferencing
+    class:         LaTeXML::Post::MakeBibliography
+    bibliography:  []
+  index :
+    phase:         crossreferencing
+    class:         LaTeXML::Post::MakeIndex
+    permuted:      false
+  crossref:
+    phase:         crossreferencing
+    position:      100
+    class:         LaTeXML::Post::CrossRef
+  mathimages:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::MathImages
+    format:        png
+    magnification: 1
+  mathsvg:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::MathImages
+    format:        svg
+  pmml:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::MathML::Presentation
+    plane1:        true
+  cmml:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::MathML::Content
+    mode:          pragmatic
+  om:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::OpenMath
+  xmath:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::XMath
+  mathtex:
+    phase:         mathtranslation
+    class:         LaTeXML::Post::TeXMath
+  graphics:
+    phase:         graphicstranslation
+    class:         LaTeXML::Post::Graphics
+  #  maps:          []
+  picturesvg:
+    phase:         graphicstranslation
+    class:         LaTeXML::Post::SVG
+  pictureimages:
+    phase:         graphicstranslation
+    class:         LaTeXML::Post::PictureImages
+  xslt  :
+    phase:         xslt
+    class:         LaTeXML::Post::XSLT
+    defaultresources: true
+  writer :
+    phase:         packaging
+    class:         LaTeXML::Post::Writer
+  manifest:
+    phase:         packaging
+    position:      10
+    class:         LaTeXML::Post::Manifest
+  packager:
+    phase:         packaging
+    position:      20
 
 

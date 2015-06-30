@@ -1,4 +1,5 @@
 #  -*- mode:yaml -*-
+# post.ltxcfg
 # Enable common PostProcessors
 # (but using defaults, so they can be conveniently disabled individually)
 # A specific format should also enable the appropriate

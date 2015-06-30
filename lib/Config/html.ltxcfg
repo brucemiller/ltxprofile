@@ -1,2 +1,4 @@
 #  -*- mode:yaml -*-
+# html.ltxcfg
+# Standin for generic HTML: We'll use HTML5
 include: html5

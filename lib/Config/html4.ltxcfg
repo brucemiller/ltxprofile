@@ -1,10 +1,12 @@
 #  -*- mode:yaml -*-
+# html4.ltxcfg
+# Supports conversion to HTML4, by default with images for math and graphics
 include: post
 defaults:
   mathimages:
     enabled: true
   pictureimages:
     enabled: true
-xslt:
-  enabled: true
-  stylesheet: LaTeXML-html4.xsl
+  xslt:
+    enabled: true
+    stylesheet: LaTeXML-html4.xsl

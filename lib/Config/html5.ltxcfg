@@ -1,10 +1,12 @@
 #  -*- mode:yaml -*-
+# html5.ltxcfg
+# Supports conversion to HTML5, by default with Presentation MathML & SVG
 include: post
 defaults:
   pmml:
     enabled: true
   picturesvg:
     enabled: true
-xslt:
-  enabled: true
-  stylesheet: LaTeXML-html5.xsl
+  xslt:
+    enabled: true
+    stylesheet: LaTeXML-html5.xsl
