@@ -15,7 +15,6 @@ definition:
     preamble: string
     postamble: string
     whatsin:  string
-  daemon:
     input_limit: int
     timeout:    int
     expire:     int
@@ -177,8 +176,6 @@ settings:
     destination:
     log: STDERR
     verbosity: 0
-  daemon:
-
   # Core set of processors; implicitly disabled by default
   bibtex:
     phase:         digestion
