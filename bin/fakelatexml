@@ -73,24 +73,24 @@ my $spec = {
     set('mathparser:engine', $_[1]); },
   # is this really even an option?
   # "cache_key=s" => \$$opts{cache_key},                              # ?
-  "source=s"    => sub { set('global:source', $_[1]); },
-  "embed"       => sub { set('packager:whatsout', 'fragment'); },
-  "whatsin=s"   => sub { set('global:whatsin', $_[1]); },           # global??
-  "whatsout=s"  => sub { set('packager:whatsout', $_[1]); },
-  "autoflush=i" => sub { set('global:input_limit', $_[1]); },
-  "timeout=i"   => sub { set('global:timeout', $_[1]); },
-  "expire=i"    => sub { set('global:expire', $_[1]); },
-  "address=s"   => sub { set('global:address', $_[1]); },
-  "port=i"      => sub { set('global:port', $_[1]); },
+  "source=s"                 => sub { set('global:source',            $_[1]); },
+  "embed"                    => sub { set('packager:whatsout',        'fragment'); },
+  "whatsin=s"                => sub { set('global:whatsin',           $_[1]); },          # global??
+  "whatsout=s"               => sub { set('packager:whatsout',        $_[1]); },
+  "autoflush=i"              => sub { set('global:input_limit',       $_[1]); },
+  "timeout=i"                => sub { set('global:timeout',           $_[1]); },
+  "expire=i"                 => sub { set('global:expire',            $_[1]); },
+  "address=s"                => sub { set('global:address',           $_[1]); },
+  "port=i"                   => sub { set('global:port',              $_[1]); },
   "post!"                    => sub { inc('post'); },
-  "omitdoctype!"             => sub { set('writer:omitdoctype', Boole($_[1])); },
-  "mathimages!"              => sub { set('mathimages:enabled', Boole($_[1])); },
+  "omitdoctype!"             => sub { set('writer:omitdoctype',       Boole($_[1])); },
+  "mathimages!"              => sub { set('mathimages:enabled',       Boole($_[1])); },
   "mathimagemagnification=f" => sub { set('mathimages:magnification', $_[1]); },
-  "mathsvg!"                 => sub { set('mathsvg:enabled', Boole($_[1])); },
-  "linelength=i"             => sub { set('pmml:linelength', $_[1]); },
-  "plane1!"                  => sub { set('pmml:plane1', Boole($_[1])); },
-  "hackplane1!"              => sub { set('pmml:hackplane1', Boole($_[1])); },
-  "presentationmathml|pmml!" => sub { set('pmml:enabled', Boole($_[1]));
+  "mathsvg!"                 => sub { set('mathsvg:enabled',          Boole($_[1])); },
+  "linelength=i"             => sub { set('pmml:linelength',          $_[1]); },
+  "plane1!"                  => sub { set('pmml:plane1',              Boole($_[1])); },
+  "hackplane1!"              => sub { set('pmml:hackplane1',          Boole($_[1])); },
+  "presentationmathml|pmml!" => sub { set('pmml:enabled',             Boole($_[1]));
     set('pmml:position', $nmaths++) if $_[1]; },
   "contentmathml|cmml!" => sub { set('cmml:enabled', Boole($_[1]));
     set('cmml:position', $nmaths++) if $_[1]; },
@@ -154,7 +154,7 @@ my $spec = {
   "VERSION!" => \$$opts{showversion},
   "help"     => \$$opts{help},
   # Oh, my!
-  "debug=s"  => \@{ $$opts{debug} }
+  "debug=s" => \@{ $$opts{debug} }
 
 };
 
@@ -373,6 +373,14 @@ sub makePlan {
       grep { (($$settings{$_}{phase} || '') eq $phase) && (($$settings{$_}{enabled} || '') eq 'true') }
       keys %$settings;
     push(@processors, @p); }
+  # Special hack for Parallel Markup: add all but first mathtranslation to the first, as secondaries
+  my @m = grep { ($$settings{$_}{phase} || '') eq 'mathtranslation' } @processors;
+  if (scalar(@m) > 1) {
+    my ($primary, @secondaries) = @m;
+    $$settings{$primary}{secondaries} = [map { $$settings{$_} } @secondaries];
+    # Remove other mathtranslators
+    @processors = grep { ($_ eq $primary) || (($$settings{$_}{phase} || '') ne 'mathtranslation') }
+      @processors; }
   print "Processing plan:\n";
   foreach my $p (@processors) {
     print "$p : " . minidump($$settings{$p}) . "\n"; }
