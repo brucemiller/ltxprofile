@@ -1,5 +1,16 @@
 #  -*- mode:yaml -*-
-# post.ltxcfg
+# /=====================================================================\ #
+# |  post.ltxcfg                                                        | #
+# | Configuration for enabling common post processors                   | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
 # Enable common PostProcessors
 # (but using defaults, so they can be conveniently disabled individually)
 # A specific format should also enable the appropriate

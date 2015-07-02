@@ -1,6 +1,16 @@
 #  -*- mode:yaml -*-
-# bib.ltxcfg
-# Enable basic digestion of BibTeX -> TeX ->XML
+# /=====================================================================\ #
+# |  bib.ltxcfg                                                         | #
+# | Configuration for processing *.bib inputs                           | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
 include: tex
 defaults:
   bibtex:

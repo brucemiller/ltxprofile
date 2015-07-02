@@ -1,6 +1,16 @@
 #  -*- mode:yaml -*-
-# epub.ltxcfg
-# Support conversion to ePub3
+# /=====================================================================\ #
+# |  epub.ltxcfg                                                        | #
+# | Configuration for converting to ePub (3)                            | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
 include: xhtml
 defaults:
   xslt:

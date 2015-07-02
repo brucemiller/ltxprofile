@@ -1,5 +1,16 @@
 #  -*- mode:yaml -*-
-# endnote.ltxcfg
+# /=====================================================================\ #
+# |  endnote.ltxcfg                                                     | #
+# | MOCKUP Configuration for adding endnote postprocessing              | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
 # Hypothetical plugin supporting endnotes
 definition:
   endnote:

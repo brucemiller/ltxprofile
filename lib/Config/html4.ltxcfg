@@ -1,5 +1,16 @@
 #  -*- mode:yaml -*-
-# html4.ltxcfg
+# /=====================================================================\ #
+# |  html4.ltxcfg                                                       | #
+# | Configuration for generating HTML 4                                 | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
 # Supports conversion to HTML4, by default with images for math and graphics
 include: post
 defaults:
