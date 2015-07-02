@@ -29,129 +29,133 @@ my $destination;
 my $opts = {};    # not-yet-handled options.
 # NOTE: Need provision for checking for allowed values of certain parameters?
 #  Handled during command-line processing? during config parsing? during instanciation?
-my $nmaths = 0;
+my $nmaths  = 0;
 my @options = ();
-sub inc { push(@options, 'include: '.$_[0]); }
-sub incif { push(@options, 'includeif: '.$_[0]); }
+sub inc   { push(@options, 'include: ' . $_[0]); }
+sub incif { push(@options, 'includeif: ' . $_[0]); }
+
 sub set {
-  my($key,$value)=@_;
-  my @keys = ('settings',split(':', $key));
-  push(@options,join("\n", map { (' 'x$_).$keys[$_].':' } 0..$#keys).' '.$value); }
+  my ($key, $value) = @_;
+  my @keys = ('settings', split(':', $key));
+  push(@options, join("\n", map { (' ' x $_) . $keys[$_] . ':' } 0 .. $#keys) . ' ' . $value); }
 
 sub Boole { return ($_[0] ? 'true' : 'false'); }
 my $spec = {
-  "output=s"      => sub {
+  "output=s" => sub {
     $destination = $_[1];
-    if($destination =~ /\.(\w+)$/){ incif($1); }
-    set("global:destination: '$_[1]'");; },
+    if ($destination =~ /\.(\w+)$/) { incif($1); }
+    set("global:destination: '$_[1]'"); },
   "destination=s" => sub {
     $destination = $_[1];
-    if($destination =~ /\.(\w+)$/){ incif($1); }
-    set('global:destination',$_[1]); },
-  "base=s"        => sub { set('global:basedir',$_[1]); }, # diff from sitedir?
-  "log=s"         => sub { set('global:log',$_[1]); },
-  "path=s"        => sub { set('global:paths',$_[1]); },
-  "strict"        => sub { set('global:strict','true'); },
-  "validate!"     => sub { set('global:validate', Boole($_[1])); },
-  "preload=s"     => sub { set('digest:preload',$_[1]); },
-  "preamble=s"    => sub { set('digest:preamble',$_[1]); },
-  "postamble=s"   => sub { set('digest:postamble',$_[1]); },
-  "comments!"     => sub { set('digest:includecomments',Boole($_[1])); },
-  "documentid=s"  => sub { set('digest:documentid',$_[1]); },
-  "includestyles" => sub { set('digest:includestyles','true'); },
-  "inputencoding=s" => sub { set('digest:inputencoding',$_[1]); },
-  "xml"             => sub { inc('xml'); $sawformat = 1; },
-  "tex"             => sub { inc('tex'); $sawformat = 1; },         # TeX OUTPUT!!!!
-  "box"             => sub { inc('box'); $sawformat = 1; },
-  "format=s"        => sub { inc($_[1]); $sawformat = 1; },
-  "bibtex"          => sub { inc('bib'); $sawinputformat = 1; },
-  "profile=s"       => sub { inc($_[1]); },
-  "mode=s"          => sub { inc($_[1]); },                     # alias
-  "noparse"         => sub { set('mathparser:enabled', 'false'); },
-  "parse=s" => sub { set('mathparser:enabled', 'true');
-		     set('mathparser:engine',$_[1]); },
-  "cache_key=s"              => \$$opts{cache_key},                                         # ?
-  "source=s"                 => \$$opts{source},                                            # ?
-  "embed"                    => sub { set('packager:whatsout','fragment'); },
-  "whatsin=s"                => sub { set('global:whatsin',$_[1]); },                # global??
-  "whatsout=s"               => sub { set('packager:whatsout',$_[1]); },
-  "autoflush=i"              => sub { set('daemon:input_limit',$_[1]); },
-  "timeout=i"                => sub { set('daemon:timeout',$_[1]); },
-  "expire=i"                 => sub { set('daemon:expire',$_[1]); },
-  "address=s"                => sub { set('daemon:address',$_[1]); },
-  "port=i"                   => sub { set('daemon:port',$_[1]); },
+    if ($destination =~ /\.(\w+)$/) { incif($1); }
+    set('global:destination', $_[1]); },
+  "base=s"          => sub { set('global:basedir',         $_[1]); },          # diff from sitedir?
+  "log=s"           => sub { set('global:log',             $_[1]); },
+  "path=s"          => sub { set('global:paths',           $_[1]); },
+  "strict"          => sub { set('global:strict',          'true'); },
+  "validate!"       => sub { set('global:validate',        Boole($_[1])); },
+  "preload=s"       => sub { set('digest:preload',         $_[1]); },
+  "preamble=s"      => sub { set('digest:preamble',        $_[1]); },
+  "postamble=s"     => sub { set('digest:postamble',       $_[1]); },
+  "comments!"       => sub { set('digest:includecomments', Boole($_[1])); },
+  "documentid=s"    => sub { set('digest:documentid',      $_[1]); },
+  "includestyles"   => sub { set('digest:includestyles',   'true'); },
+  "inputencoding=s" => sub { set('digest:inputencoding',   $_[1]); },
+  "xml"      => sub { inc('xml'); $sawformat      = 1; },
+  "tex"      => sub { inc('tex'); $sawformat      = 1; },    # TeX OUTPUT!!!!
+  "box"      => sub { inc('box'); $sawformat      = 1; },
+  "format=s" => sub { inc($_[1]); $sawformat      = 1; },
+  "bibtex"   => sub { inc('bib'); $sawinputformat = 1; },
+  "profile=s" => sub { inc($_[1]); },
+  "mode=s"    => sub { inc($_[1]); },                           # alias
+  "noparse"   => sub { set('mathparser:enabled', 'false'); },
+  "parse=s"   => sub { set('mathparser:enabled', 'true');
+    set('mathparser:engine', $_[1]); },
+  # is this really even an option?
+  # "cache_key=s" => \$$opts{cache_key},                              # ?
+  "source=s"    => sub { set('global:source', $_[1]); },
+  "embed"       => sub { set('packager:whatsout', 'fragment'); },
+  "whatsin=s"   => sub { set('global:whatsin', $_[1]); },           # global??
+  "whatsout=s"  => sub { set('packager:whatsout', $_[1]); },
+  "autoflush=i" => sub { set('global:input_limit', $_[1]); },
+  "timeout=i"   => sub { set('global:timeout', $_[1]); },
+  "expire=i"    => sub { set('global:expire', $_[1]); },
+  "address=s"   => sub { set('global:address', $_[1]); },
+  "port=i"      => sub { set('global:port', $_[1]); },
   "post!"                    => sub { inc('post'); },
   "omitdoctype!"             => sub { set('writer:omitdoctype', Boole($_[1])); },
   "mathimages!"              => sub { set('mathimages:enabled', Boole($_[1])); },
-  "mathimagemagnification=f" => sub { set('mathimages:magnification',$_[1]); },
+  "mathimagemagnification=f" => sub { set('mathimages:magnification', $_[1]); },
   "mathsvg!"                 => sub { set('mathsvg:enabled', Boole($_[1])); },
   "linelength=i"             => sub { set('pmml:linelength', $_[1]); },
   "plane1!"                  => sub { set('pmml:plane1', Boole($_[1])); },
   "hackplane1!"              => sub { set('pmml:hackplane1', Boole($_[1])); },
-  "presentationmathml|pmml!" => sub { set('pmml:enabled',Boole($_[1]));
-				      set('pmml:position', $nmaths++) if $_[1]; },
-  "contentmathml|cmml!"      => sub { set('cmml:enabled',Boole($_[1]));
-				      set('cmml:position', $nmaths++) if $_[1]; },
-  "openmath|om!"             => sub { set('om:enabled', Boole($_[1]));
-				      set('om:position', $nmaths++) if $_[1]; },
-  "keepXMath!"               => sub { set('xmath:enabled', Boole($_[1]));
-				      set('xmath:position', $nmaths++) if $_[1]; },
-  "mathtex!"                 => sub { set('mathtex:enabled', Boole($_[1]));
-				      set('mathtex:position', $nmaths++) if $_[1]; },
-  "stylesheet=s"             => sub { set('xslt:enabled','true');
-				      set('xslt:stylesheet', $_[1]); },
-  "xsltparameter=s"   => sub { set('xslt:enabled','true');
-			       set('xslt:parameters',$_[1]); },
-  "timestamp=s"       => sub { set('xslt:timestamp',$_[1]); },
+  "presentationmathml|pmml!" => sub { set('pmml:enabled', Boole($_[1]));
+    set('pmml:position', $nmaths++) if $_[1]; },
+  "contentmathml|cmml!" => sub { set('cmml:enabled', Boole($_[1]));
+    set('cmml:position', $nmaths++) if $_[1]; },
+  "openmath|om!" => sub { set('om:enabled', Boole($_[1]));
+    set('om:position', $nmaths++) if $_[1]; },
+  "keepXMath!" => sub { set('xmath:enabled', Boole($_[1]));
+    set('xmath:position', $nmaths++) if $_[1]; },
+  "mathtex!" => sub { set('mathtex:enabled', Boole($_[1]));
+    set('mathtex:position', $nmaths++) if $_[1]; },
+  "stylesheet=s" => sub { set('xslt:enabled', 'true');
+    set('xslt:stylesheet', $_[1]); },
+  "xsltparameter=s" => sub { set('xslt:enabled', 'true');
+    set('xslt:parameters', $_[1]); },
+  "timestamp=s"       => sub { set('xslt:timestamp',        $_[1]); },
   "defaultresources!" => sub { set('xslt:defaultresources', Boole($_[1])); },
-  "css=s"             => sub { set('xslt:css',$_[1]); },
-  "javascript=s"      => sub { set('xslt:javascript',$_[1]); },
-  "icon=s"            => sub { set('xslt:icon', $_[1]); },
-  "split!"            => sub { set('split:enabled', Boole($_[1])); },
-	    "splitat=s"         => sub {
-	      my $path = $splitpaths{ $_[1] };
+  "css=s"             => sub { set('xslt:css',              $_[1]); },
+  "javascript=s"      => sub { set('xslt:javascript',       $_[1]); },
+  "icon=s"            => sub { set('xslt:icon',             $_[1]); },
+  "split!"            => sub { set('split:enabled',         Boole($_[1])); },
+  "splitat=s"         => sub {
+    my $path = $splitpaths{ $_[1] };
     configWarning("Value not in [" . join(',', keys %splitpaths) . "]",
       $_[1], 'split', 'splitat') unless $path;
-    set('split:enabled','true');
-    set('split:splitpath',$path); },
-  "splitpath=s"   => sub { set('split:enabled','true');
-			   set('split:splitpath',$_[1]); },
-  "splitnaming=s" => sub { set('split:enabled','true');
-			   set('split:splitnaming',$_[1]); },
-  "scan!"         => sub { set('scan:enabled', 'true'); },
-  "prescan"    => sub { set("scan:enabled', true"); },           # AND disable other post!!!
-  "crossref!"  => sub { set('crossref:enabled','true'); },
-  "urlstyle=s" => sub { set('crossref:urlstyle',$_[1]); },
-  "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc',$_[1]); },
-  "numbersections!"        => sub { set('crossref:numbersections', Boole($_[1])); },
-  "index!"                 => sub { set('index:enabled', Boole($_[1])); },
-  "permutedindex!"         => sub { set('indexpermuted','true'); },
-  "splitindex!"            => sub { set('indexsplit', Boole($_[1])); },
-  "bibliography=s"         => sub { set('bibbibliographies', $_[1]); },
-  "nobibliography"         => sub { set('bib:enabled', 'false'); },
-  "splitbibliography!"     => sub { set('bib:split', Boole($_[1])); },
-  "dbfile=s"               => sub { set('global:dbfile',$_[1]); },
-  "sitedirectory=s"        => sub { set('global:sitedirectory',$_[1]); },
-  "resourcedirectory=s"    => sub { set('global:resourcedirectory',$_[1]); },
-  "sourcedirectory=s"      => sub { set('globalsourcedir',$_[1]); },
-  "graphicimages!"         => sub { set('graphicsenabled', Boole($_[1])); },
+    set('split:enabled',   'true');
+    set('split:splitpath', $path); },
+  "splitpath=s" => sub { set('split:enabled', 'true');
+    set('split:splitpath', $_[1]); },
+  "splitnaming=s" => sub { set('split:enabled', 'true');
+    set('split:splitnaming', $_[1]); },
+  "scan!" => sub { set('scan:enabled', 'true'); },
+  "prescan"    => sub { set("scan:enabled', true"); },        # AND disable other post!!!
+  "crossref!"  => sub { set('crossref:enabled', 'true'); },
+  "urlstyle=s" => sub { set('crossref:urlstyle', $_[1]); },
+  "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc', $_[1]); },
+  "numbersections!"     => sub { set('crossref:numbersections',  Boole($_[1])); },
+  "index!"              => sub { set('index:enabled',            Boole($_[1])); },
+  "permutedindex!"      => sub { set('indexpermuted',            'true'); },
+  "splitindex!"         => sub { set('indexsplit',               Boole($_[1])); },
+  "bibliography=s"      => sub { set('bibbibliographies',        $_[1]); },
+  "nobibliography"      => sub { set('bib:enabled',              'false'); },
+  "splitbibliography!"  => sub { set('bib:split',                Boole($_[1])); },
+  "dbfile=s"            => sub { set('global:dbfile',            $_[1]); },
+  "sitedirectory=s"     => sub { set('global:sitedirectory',     $_[1]); },
+  "resourcedirectory=s" => sub { set('global:resourcedirectory', $_[1]); },
+  "sourcedirectory=s"   => sub { set('globalsourcedir',          $_[1]); },
+  "graphicimages!"      => sub { set('graphicsenabled',          Boole($_[1])); },
   "graphicsmap=s" => sub {    # graphicsmap=srctype.desttype
     my ($src, $dest) = split(/\./, $_[1]);
     $dest = $src unless $dest;
     set('graphics:graphics_types', $src);
-### Need fancy identation!!
+### Need fancy identation!! or type fiddling.
 #####    set('graphics:type_properties"  $src:\n        destination_type: $dest");
- },
-  "svg!"           => sub { set('picturesvg:enabled', Boole($_[1])); },
+  },
+  "svg!"           => sub { set('picturesvg:enabled',     Boole($_[1])); },
   "pictureimages!" => sub { set('pictureimages: enabled', Boole($_[1])); },
-  # HELP
 
   "quiet"   => sub { $verbosity--; },
   "verbose" => sub { $verbosity++; },
 
+  # These need to be noticed, but will result in printing a message and exitting.
   "VERSION!" => \$$opts{showversion},
-  "debug=s"  => \@{ $$opts{debug} },
-  "help"     => \$$opts{help}
+  "help"     => \$$opts{help},
+  # Oh, my!
+  "debug=s"  => \@{ $$opts{debug} }
+
 };
 
 #======================================================================
@@ -160,7 +164,7 @@ my $source = $ARGV[0];
 
 # Add a couple of special case options
 # If format explicitly given, remove "includif: $format" from @options
-if ($sawformat){
+if ($sawformat) {
   @options = grep { $_ !~ /^includeif:/ } @options; }
 # Load configuration implied by input & output formats.
 if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
@@ -194,29 +198,57 @@ BEGIN {
       packaging));
 }
 #======================================================================
+# Configuration consists of configuration files and command-line options.
+# These are composed in a way to produce a configuration which determines
+# global parameters, a selection of enabled "processors" and the parameters
+# which control the behavior of each processor.
+#
+# Configuration files (in YAML format) consist at the top-level (map keys)
+# of include statements and up to three "Sections".
+#   include: name ; includes configuration specified in the configuration name.ltxcfg
+#   includeif: name ; includes the configuration if the configuration file can be found.
+# The configuration sections are:
+#   definitions: defines the hierarchical arrangement of parameters,
+#     with the leaves, representing the actual parameteres, being "types" of the form
+#       boolean, int, string, pathname, classname, phasename, date, list[$type], choice[$type,...]
+#   defaults:
+#   settings: these sections give specific values for the parameters, following the heirarchy
+#      given by definitions.  They values must conform to the type.  However, not all parameters
+#      must be given values; the rest remain undefined.
+#      The settings section is imperative, while the defaults section specifies parameter
+#      values to use if the corresponding parameter has not been set in settings.
+#
+# Each section contains a map whose keys are either "global" or correspond to a processor name.
+# Within each such group are the actual parameter names and values
+# (potentially, but rarely, the parameters can contain sub-parameters).
+#
+# Command line options are typically mapped to the equivalent configuration settings,
+# and so are imperative.
+
 sub LoadConfiguration {
   my ($options) = @_;    # options in YAML form
   my $config = {};
   # Load base configuration
   loadConfigFile($config, 'LaTeXML');
-  # Could load a user-configuration file?
-
+  # Could load a user-configuration file.  What should it be called???
+  # loadConfigFile($config, '', $iffound);
   # Now invoke the configuration (multiple yaml docs) implied by command-line options
   mergeConfig($config, YAML::Tiny->read_string($options));
   # Special case for mathtranslation
-  my @m = grep { (($$config{settings}{$_}{phase}||'') eq 'mathtranslation') }
-    keys %{$$config{settings}};
+  my @m = grep { (($$config{settings}{$_}{phase} || '') eq 'mathtranslation') }
+    keys %{ $$config{settings} };
   # If we have enabled mathtranslations, remove enabled from defaults before applying
-  if(grep { (($$config{settings}{$_}{enabled}||'') eq 'true') } @m){
+  if (grep { (($$config{settings}{$_}{enabled} || '') eq 'true') } @m) {
     map { $$config{defaults}{$_}{enabled} = 'false' } @m; }
 
-  applyDefaults($config,$$config{defaults});
+  applyDefaults($config, $$config{defaults});
   return $config; }
 
 sub loadConfigFile {
   my ($config, $source, $iffound) = @_;
   local $LaTeXML::CONFIG_FILE = $source;
   # Eventually search for config files
+  # Presumably we'd look for paths in settings:global:paths ? (defaults haven't been applied yet!)
   my $path = $CONFIGDIR . '/' . $source . '.ltxcfg';
   if (-f $path) {
     print "Loading configuration $source ($path)\n";
@@ -234,7 +266,7 @@ sub mergeConfig {
       my $value = $$ydoc{$name};
       if ($name eq 'include') {
         loadConfigFile($config, $value); }
-      elsif ($name eq 'includeif') { # but we shouldn't make an error...
+      elsif ($name eq 'includeif') {    # but we shouldn't make an error...
         loadConfigFile($config, $value, 1); }
       else {
         mergeValue($config, $value, $name); } } } }
@@ -245,14 +277,12 @@ sub mergeValue {
   my $key    = $keys[-1];
   my $prev   = $$object{$key};
   my $struct = 'scalar';    # the type of structure to maintain in $config: HASH, ARRAY, scalar
-  # definition block gets special treatmen
   if ($keys[0] eq 'definition') {
+    # definition block gets special treatment
     # Possible type-checking of type specifiers?
-    $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
-  # defaults block also
-  elsif ($keys[0] eq 'defaults') { # Just merge into defaults tree, no type checking(?)
-    $struct = (ref $prev) || (ref $value); }    # previous structure, or copy from $value
-  elsif (my $type = configLookup($config, 'definition', @keys[1..$#keys])) {
+    $struct = (ref $prev) || (ref $value); }    # use previous structure, or copy from $value
+  elsif (my $type = configLookup($config, 'definition', @keys[1 .. $#keys])) {
+    # Otherwise, we'll type-check the leaves, getting the type from the definitions section
     # $type can be hash for intermediate levels, else a declared type.
     $struct = (ref $type) || ($type =~ /^list\[/ ? 'ARRAY' : 'scalar');
     return if (!ref $type) && !configCheckType($type, $value, @keys); }
@@ -260,14 +290,16 @@ sub mergeValue {
     configWarning("Unknown key (possible typo?)", $value, @keys);
     return; }
   if ($struct eq 'HASH') {
-    $$object{$key} = {} unless $prev;           # initialize if needed
+    # build a hash; probably intermediate levels of config structure.
+    $$object{$key} = {} unless $prev;    # initialize if needed
     if (!defined $value) { }
     elsif (ref $value eq 'HASH') {
       map { mergeValue($config, $$value{$_}, @keys, $_) } keys %$value; }
     else {
       configWarning("Cannot merge value into mapping", $value, @keys); } }
   elsif ($struct eq 'ARRAY') {
-    $$object{$key} = [] unless $prev;           # initialize if needed
+    # add to a list of values
+    $$object{$key} = [] unless $prev;    # initialize if needed
     if (defined $value) {
       push(@{ $$object{$key} }, (ref $value eq 'ARRAY' ? @$value : $value)); } }
   else {
@@ -277,18 +309,18 @@ sub applyDefaults {
   my ($config, $default, @keys) = @_;
   my $object = configLookup($config, 'settings', @keys[0 .. $#keys - 1]);
   my $key    = $keys[-1];
-  my $exists = $key && ! exists $$object{$key};
-  if(ref $default eq 'HASH'){     # if hash, we're still descending.
-    $$object{$key} = {} if $exists; # initialize if needed.
+  my $exists = $key && !exists $$object{$key};
+  if (ref $default eq 'HASH') {          # if hash, we're still descending.
+    $$object{$key} = {} if $exists;      # initialize if needed.
     map { applyDefaults($config, $$default{$_}, @keys, $_) } keys %$default; }
-  elsif($exists){
-    $$object{$key} = $default; }  # No previous value, assign default.
+  elsif ($exists) {
+    $$object{$key} = $default; }         # No previous value, assign default.
   return; }
 
 # sorta like $$config{key1}{key2}...{keyn}
+# (is there no Perl shorthand for this?
 sub configLookup {
-  my ($config, @keys) = @_;
-  my $object = $config;
+  my ($object, @keys) = @_;
   map { $object = $object && $$object{$_} } @keys;
   return $object; }
 
@@ -335,7 +367,6 @@ sub makePlan {
   my ($config) = @_;
   my $settings = $$config{settings};
   print "Global: " . minidump($$settings{global}) . "\n";
-  print "Daemon: " . minidump($$settings{daemon}) . "\n";
   my @processors = ();
   foreach my $phase (@PHASES) {
     my @p = sort { ($$settings{$a}{position} || 0) <=> ($$settings{$b}{position} || 0) }
