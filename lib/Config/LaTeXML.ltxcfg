@@ -30,248 +30,216 @@ definition:
     expire:     int
     address:    string
     port:       int
-  bibtex:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    input-extension: string
-    pool:       pathname
-  digest :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    includecomments: boolean
-    documentid: string
-    includestyles: boolean
-    inputencoding: string
-  rewrite :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  mathparser :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    engine:     classname
-    grammar:    pathname
-  split:
-    phase:      phasename
-    enabled:    boolean
-    class:      classname
-    splitpath:  string
-    splitnaming: choice[id,idrelative,label,labelrelative]
-  scan:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  bibliography :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    bibliography: list[pathname]
-    split:      boolean
-  index :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    permuted:   boolean
-    split:      boolean
-  crossref:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    urlstyle:   choice[server,negotiated,file]
-    navigation_toc: boolean
-    numbersections: boolean
-  mathimages:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    format:     string
-    magnification: int
-  mathsvg:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    format:     string
-  pmml:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    linelength: int
-    plane1:     boolean
-    hackplane1: boolean
-  cmml:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    mode:       string
-  om:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  xmath:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  mathtex:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  graphics:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    graphics_types: list[string]
-    type_properties : hash[]
-  picturesvg:
-    phase:      phasename
-    position:   int
-    class:      classname
-    enabled:    boolean
-  pictureimages:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  xslt  :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    stylesheet: pathname
-    timestamp:  date
-    defaultresources: boolean
-    css:        list[pathname]
-    javascript: list[pathname]
-    icon:       pathname
-    parameters: list[string]
-  writer :
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    omitdoctype: boolean
-  manifest:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-  packager:
-    phase:      phasename
-    position:   int
-    enabled:    boolean
-    class:      classname
-    whatsout:   string
----
-# Since this is loaded before everything, including command line options
-# it can be equivalently defaults or settings
+  digestion:
+    bibtex:
+      position:   int
+      enabled:    boolean
+      input-extension: string
+      pool:       pathname
+    digest :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      includecomments: boolean
+      documentid: string
+      includestyles: boolean
+      inputencoding: string
+    rewrite :
+      position:   int
+      enabled:    boolean
+      class:      classname
+    mathparser :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      engine:     classname
+      grammar:    pathname
+  splitting:
+    split:
+      enabled:    boolean
+      class:      classname
+      splitpath:  string
+      splitnaming: choice[id,idrelative,label,labelrelative]
+  scanning:
+    scan:
+      position:   int
+      enabled:    boolean
+      class:      classname
+  fillin:
+    bibliography :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      bibliography: list[pathname]
+      split:      boolean
+    index :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      permuted:   boolean
+      split:      boolean
+    crossref:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      urlstyle:   choice[server,negotiated,file]
+      navigation_toc: boolean
+      numbersections: boolean
+  mathtranslation:
+    mathimages:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      format:     string
+      magnification: int
+    mathsvg:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      format:     string
+    pmml:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      linelength: int
+      plane1:     boolean
+      hackplane1: boolean
+    cmml:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      mode:       string
+    om:
+      position:   int
+      enabled:    boolean
+      class:      classname
+    xmath:
+      position:   int
+      enabled:    boolean
+      class:      classname
+    mathtex:
+      position:   int
+      enabled:    boolean
+      class:      classname
+  graphicstranslation:
+    graphics:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      graphics_types: list[string]
+      type_properties : hash[]
+    picturesvg:
+      position:   int
+      class:      classname
+      enabled:    boolean
+    pictureimages:
+      position:   int
+      enabled:    boolean
+      class:      classname
+  xslt:
+    xslt  :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      stylesheet: pathname
+      timestamp:  date
+      defaultresources: boolean
+      css:        list[pathname]
+      javascript: list[pathname]
+      icon:       pathname
+      parameters: list[string]
+  packaging:
+    writer :
+      position:   int
+      enabled:    boolean
+      class:      classname
+      omitdoctype: boolean
+    manifest:
+      position:   int
+      enabled:    boolean
+      class:      classname
+    packager:
+      position:   int
+      enabled:    boolean
+      class:      classname
+      whatsout:   string
+  ---
+  # Since this is loaded before everything, including command line options
+  # it can be equivalently defaults or settings
 settings:
   global:
     destination:
     log: STDERR
     verbosity: 0
   # Core set of processors; implicitly disabled by default
-  bibtex:
-    phase:         digestion
-    position:      -10
-    input-extension: bib
-    pool:          BibTeX.pool.ltxml
-  digest :
-    phase:         digestion
-    class:         LaTeXML::Core
-  rewrite :
-    phase:         digestion
-    position:      10
-    class:         LaTeXML::Core::Rewrite
-  mathparser :
-    phase:         digestion
-    position:      20
-    class:         LaTeXML::MathParser
-    engine:        Parse::RecDescent
-    grammar:       MathGrammar
-  split:
-    phase:         splitting
-    class:         LaTeXML::Post::Split
-  scan:
-    phase:         scanning
-    class:         LaTeXML::Post::Scan
-  bibliography :
-    phase:         crossreferencing
-    class:         LaTeXML::Post::MakeBibliography
-    bibliography:  []
-  index :
-    phase:         crossreferencing
-    class:         LaTeXML::Post::MakeIndex
-    permuted:      false
+  digestion:
+    bibtex:
+      position:      -10
+      input-extension: bib
+      pool:          BibTeX.pool.ltxml
+    digest :
+      class:         LaTeXML::Core
+    rewrite :
+      position:      10
+      class:         LaTeXML::Core::Rewrite
+    mathparser :
+
+      class:         LaTeXML::MathParser
+      engine:        Parse::RecDescent
+      grammar:       MathGrammar
+  splitting:
+    split:
+      class:         LaTeXML::Post::Split
+  scanning:
+    scan:
+      class:         LaTeXML::Post::Scan
   crossref:
-    phase:         crossreferencing
-    position:      100
-    class:         LaTeXML::Post::CrossRef
-  mathimages:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::MathImages
-    format:        png
-    magnification: 1
-  mathsvg:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::MathImages
-    format:        svg
-  pmml:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::MathML::Presentation
-    plane1:        true
-  cmml:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::MathML::Content
-    mode:          pragmatic
-  om:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::OpenMath
-  xmath:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::XMath
-  mathtex:
-    phase:         mathtranslation
-    class:         LaTeXML::Post::TeXMath
-  graphics:
-    phase:         graphicstranslation
-    class:         LaTeXML::Post::Graphics
-  #  maps:          []
-  picturesvg:
-    phase:         graphicstranslation
-    class:         LaTeXML::Post::SVG
-  pictureimages:
-    phase:         graphicstranslation
-    class:         LaTeXML::Post::PictureImages
-  xslt  :
-    phase:         xslt
-    class:         LaTeXML::Post::XSLT
-    defaultresources: true
-  writer :
-    phase:         packaging
-    class:         LaTeXML::Post::Writer
-  manifest:
-    phase:         packaging
-    position:      10
-    class:         LaTeXML::Post::Manifest
-  packager:
-    phase:         packaging
-    position:      20
-
-
+    bibliography :
+      class:         LaTeXML::Post::MakeBibliography
+      bibliography:  []
+    index :
+      class:         LaTeXML::Post::MakeIndex
+      permuted:      false
+    crossref:
+      position:      100
+      class:         LaTeXML::Post::CrossRef
+  mathtranslation:
+    mathimages:
+      class:         LaTeXML::Post::MathImages
+      format:        png
+      magnification: 1
+    mathsvg:
+      class:         LaTeXML::Post::MathImages
+      format:        svg
+    pmml:
+      class:         LaTeXML::Post::MathML::Presentation
+      plane1:        true
+    cmml:
+      class:         LaTeXML::Post::MathML::Content
+      mode:          pragmatic
+    om:
+      class:         LaTeXML::Post::OpenMath
+    xmath:
+      class:         LaTeXML::Post::XMath
+    mathtex:
+      class:         LaTeXML::Post::TeXMath
+  graphicstranslation:
+    graphics:
+      class:         LaTeXML::Post::Graphics
+    #  maps:          []
+    picturesvg:
+      class:         LaTeXML::Post::SVG
+    pictureimages:
+      class:         LaTeXML::Post::PictureImages
+  xslt:
+    xslt  :
+      class:         LaTeXML::Post::XSLT
+      defaultresources: true
+  package:
+    writer :
+      class:         LaTeXML::Post::Writer
+    manifest:
+      position:      10
+      class:         LaTeXML::Post::Manifest
+    packager:
+      position:      20

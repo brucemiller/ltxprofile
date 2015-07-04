@@ -121,7 +121,7 @@ my $spec = {
   "splitnaming=s" => sub { set('split:enabled', 'true');
     set('split:splitnaming', $_[1]); },
   "scan!" => sub { set('scan:enabled', 'true'); },
-  "prescan"    => sub { set("scan:enabled', true"); },        # AND disable other post!!!
+  "prescan"    => sub { set("scan:enabled', true"); },       # AND disable other post PHASE!!!
   "crossref!"  => sub { set('crossref:enabled', 'true'); },
   "urlstyle=s" => sub { set('crossref:urlstyle', $_[1]); },
   "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc', $_[1]); },
@@ -234,6 +234,8 @@ sub LoadConfiguration {
   # loadConfigFile($config, '', $iffound);
   # Now invoke the configuration (multiple yaml docs) implied by command-line options
   mergeConfig($config, YAML::Tiny->read_string($options));
+  # NOTE: We could copy settings to an actualy "configuration" object,
+  # and do all defaulting/resolution there, so the original is unchanged?
   # Special case for mathtranslation
   my @m = grep { (($$config{settings}{$_}{phase} || '') eq 'mathtranslation') }
     keys %{ $$config{settings} };
