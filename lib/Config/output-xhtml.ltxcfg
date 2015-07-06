@@ -1,7 +1,7 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  tex.ltxcfg                                                         | #
-# | Configuration for processing *.tex inputs                           | #
+# |  output-xhtml.ltxcfg                                                | #
+# | Configuration for generating XHTML                                  | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -11,11 +11,13 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-# Enable basic digestion TeX->XML
+# Supports conversion to XHTML, by default with Presentation MathML & SVG
+include: post
 defaults:
-  digest:
+  pmml:
     enabled: true
-  rewrite :
+  picturesvg:
     enabled: true
-  mathparser :
+  xslt:
     enabled: true
+    stylesheet: LaTeXML-xhtml.xsl

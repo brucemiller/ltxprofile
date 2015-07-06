@@ -1,7 +1,7 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  html4.ltxcfg                                                       | #
-# | Configuration for generating HTML 4                                 | #
+# |  output-epub.ltxcfg                                                 | #
+# | Configuration for converting to ePub (3)                            | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -11,13 +11,15 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-# Supports conversion to HTML4, by default with images for math and graphics
-include: post
+include: output-xhtml
 defaults:
-  mathimages:
-    enabled: true
-  pictureimages:
-    enabled: true
   xslt:
     enabled: true
-    stylesheet: LaTeXML-html4.xsl
+    stylesheet: LaTeXML-epub3.xsl
+  manifest:
+    enabled: true
+    class: LaTeXML::Post::Manifest::Epub
+  packager:
+    enabled: true
+    class: LaTeXML::Post::Zip
+

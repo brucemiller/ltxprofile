@@ -1,7 +1,7 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  xhtml.ltxcfg                                                       | #
-# | Configuration for generating XHTML                                  | #
+# |  output-html4.ltxcfg                                                | #
+# | Configuration for generating HTML 4                                 | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -11,13 +11,13 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-# Supports conversion to XHTML, by default with Presentation MathML & SVG
+# Supports conversion to HTML4, by default with images for math and graphics
 include: post
 defaults:
-  pmml:
+  mathimages:
     enabled: true
-  picturesvg:
+  pictureimages:
     enabled: true
   xslt:
     enabled: true
-    stylesheet: LaTeXML-xhtml.xsl
+    stylesheet: LaTeXML-html4.xsl

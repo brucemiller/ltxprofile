@@ -12,158 +12,200 @@
 # \=========================================================ooo==U==ooo=/ #
 #
 # Definitions of all core processing modules
-definition:
+definitions:
   global:
-    destination: pathname
-    basedir:  pathname
-    log:      pathname
-    paths:    list[pathname]
-    strict:   boolean
-    validate: boolean
-    verbosity: int
-    preload:  list[pathname]
-    preamble: string
-    postamble: string
-    whatsin:  string
-    input_limit: int
-    timeout:    int
-    expire:     int
-    address:    string
-    port:       int
-  digestion:
-    bibtex:
-      position:   int
-      enabled:    boolean
-      input-extension: string
-      pool:       pathname
-    digest :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      includecomments: boolean
-      documentid: string
-      includestyles: boolean
-      inputencoding: string
-    rewrite :
-      position:   int
-      enabled:    boolean
-      class:      classname
-    mathparser :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      engine:     classname
-      grammar:    pathname
-  splitting:
-    split:
-      enabled:    boolean
-      class:      classname
-      splitpath:  string
-      splitnaming: choice[id,idrelative,label,labelrelative]
-  scanning:
-    scan:
-      position:   int
-      enabled:    boolean
-      class:      classname
-  fillin:
-    bibliography :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      bibliography: list[pathname]
-      split:      boolean
-    index :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      permuted:   boolean
-      split:      boolean
-    crossref:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      urlstyle:   choice[server,negotiated,file]
-      navigation_toc: boolean
-      numbersections: boolean
-  mathtranslation:
-    mathimages:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      format:     string
-      magnification: int
-    mathsvg:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      format:     string
-    pmml:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      linelength: int
-      plane1:     boolean
-      hackplane1: boolean
-    cmml:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      mode:       string
-    om:
-      position:   int
-      enabled:    boolean
-      class:      classname
-    xmath:
-      position:   int
-      enabled:    boolean
-      class:      classname
-    mathtex:
-      position:   int
-      enabled:    boolean
-      class:      classname
-  graphicstranslation:
-    graphics:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      graphics_types: list[string]
-      type_properties : hash[]
-    picturesvg:
-      position:   int
-      class:      classname
-      enabled:    boolean
-    pictureimages:
-      position:   int
-      enabled:    boolean
-      class:      classname
-  xslt:
-    xslt  :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      stylesheet: pathname
-      timestamp:  date
-      defaultresources: boolean
-      css:        list[pathname]
-      javascript: list[pathname]
-      icon:       pathname
-      parameters: list[string]
-  packaging:
-    writer :
-      position:   int
-      enabled:    boolean
-      class:      classname
-      omitdoctype: boolean
-    manifest:
-      position:   int
-      enabled:    boolean
-      class:      classname
-    packager:
-      position:   int
-      enabled:    boolean
-      class:      classname
-      whatsout:   string
-  ---
+    destination: pathname       # Destination pathname.
+    basedir:    pathname
+    log:        pathname
+    paths:      list[pathname]
+    strict:     boolean         # Be less forgiving about errors.
+    validate:   boolean         # validate input/output XML.
+    verbosity:  int             # How much information to report during processing.
+    preload:    list[pathname]  # list of packages to load before processing.
+    preamble:   string          # TeX to prepend to input before processing (for fragments).[digest?]
+    postamble:  string          # TeX to append to input before processing (for fragments).
+    whatsin:    string          # the type of packaging (???)
+    input_limit: int            # ?
+    timeout:    int             # timeout (seconds) for a job.
+    expire:     int             # ?
+    address:    string          # ip address of server
+    port:       int             # port on server
+    firstprocessor: string      # choose subset of processor list, with this one first.
+    lastprocessor: string       # choose subset of processor list, with this one last.
+  # Basic digestion processors
+  bibtex:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    input-extension: string     # ?
+    pool:       pathname        # ?
+  digest :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    includecomments: boolean
+    documentid: string
+    includestyles: boolean
+    inputencoding: string
+  ingest :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    documentid: string
+  rewrite :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+  mathparser :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    engine:     classname
+    grammar:    pathname
+  # Splitting the document into appropriate pages
+  split:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    splitpath:  string
+    splitnaming: choice[id,idrelative,label,labelrelative]
+  # Scan processor
+  scan:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+  # Various filling-in & cross referencing processors
+  bibliography :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    bibliography: list[pathname]
+    split:      boolean
+  index :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    permuted:   boolean
+    split:      boolean
+  crossref:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    urlstyle:   choice[server,negotiated,file]
+    navigation_toc: boolean
+    numbersections: boolean
+ # Translators for math
+  mathimages:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+    format:     string
+    magnification: int
+  mathsvg:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+    format:     string
+  pmml:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+    linelength: int
+    plane1:     boolean
+    hackplane1: boolean
+  cmml:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+    mode:       string
+  om:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+  xmath:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+  mathtex:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (math).
+  # Translators for graphics
+  graphics:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (graphics).
+    graphics_types: list[string]
+    type_properties : hash[]
+  picturesvg:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (graphics).
+    enabled:    boolean         # whether this processor is enabled or active.
+  pictureimages:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    category:   string          # the category this processor belongs to (graphics).
+  # XSLT
+  xslt  :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    stylesheet: pathname        # the XSLT stylesheet to apply.
+    timestamp:  date
+    defaultresources: boolean
+    css:        list[pathname]
+    javascript: list[pathname]
+    icon:       pathname
+    parameters: list[string]
+  # Packaging the results
+  writer :
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    omitdoctype: boolean
+  manifest:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+  packager:
+    before:     list[string]    # the named processor(s) must precede this one.
+    after:      list[string]    # the named processor(s) must follow this one.
+    enabled:    boolean         # whether this processor is enabled or active.
+    class:      classname       # the (perl) class that implements this processor.
+    whatsout:   string
+---
   # Since this is loaded before everything, including command line options
   # it can be equivalently defaults or settings
 settings:
@@ -171,75 +213,116 @@ settings:
     destination:
     log: STDERR
     verbosity: 0
-  # Core set of processors; implicitly disabled by default
-  digestion:
-    bibtex:
-      position:      -10
-      input-extension: bib
-      pool:          BibTeX.pool.ltxml
-    digest :
-      class:         LaTeXML::Core
-    rewrite :
-      position:      10
-      class:         LaTeXML::Core::Rewrite
-    mathparser :
-
-      class:         LaTeXML::MathParser
-      engine:        Parse::RecDescent
-      grammar:       MathGrammar
-  splitting:
-    split:
-      class:         LaTeXML::Post::Split
-  scanning:
-    scan:
-      class:         LaTeXML::Post::Scan
+  # Basic digestion processors
+  bibtex:
+    before:        digest
+    input-extension: bib
+    pool:          BibTeX.pool.ltxml
+  digest :
+    class:         LaTeXML::Core
+  ingest :
+    after:         digest
+    class:         LaTeXML::Core::Document
+  rewrite:
+    after:         ingest
+    class:         LaTeXML::Core::Rewrite
+  mathparser:
+    after:         rewrite
+    class:         LaTeXML::MathParser
+    engine:        Parse::RecDescent
+    grammar:       MathGrammar
+  # Splitting the document into appropriate pages
+  split:
+    after:         mathparser
+    class:         LaTeXML::Post::Split
+  # Scan processor
+  scan:
+    after:         split
+    class:         LaTeXML::Post::Scan
+  # Various filling-in & cross referencing processors
+  bibliography :
+    after:         scan
+    before:        crossref
+    class:         LaTeXML::Post::MakeBibliography
+    bibliography:  []
+  index :
+    after:         scan
+    before:        crossref
+    class:         LaTeXML::Post::MakeIndex
+    permuted:      false
   crossref:
-    bibliography :
-      class:         LaTeXML::Post::MakeBibliography
-      bibliography:  []
-    index :
-      class:         LaTeXML::Post::MakeIndex
-      permuted:      false
-    crossref:
-      position:      100
-      class:         LaTeXML::Post::CrossRef
-  mathtranslation:
-    mathimages:
-      class:         LaTeXML::Post::MathImages
-      format:        png
-      magnification: 1
-    mathsvg:
-      class:         LaTeXML::Post::MathImages
-      format:        svg
-    pmml:
-      class:         LaTeXML::Post::MathML::Presentation
-      plane1:        true
-    cmml:
-      class:         LaTeXML::Post::MathML::Content
-      mode:          pragmatic
-    om:
-      class:         LaTeXML::Post::OpenMath
-    xmath:
-      class:         LaTeXML::Post::XMath
-    mathtex:
-      class:         LaTeXML::Post::TeXMath
-  graphicstranslation:
-    graphics:
-      class:         LaTeXML::Post::Graphics
+#    before:        ?
+    class:         LaTeXML::Post::CrossRef
+ # Translators for math
+  mathimages:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::MathImages
+    category:      math
+    format:        png
+    magnification: 1
+  mathsvg:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::MathImages
+    category:      math
+    format:        svg
+  pmml:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::MathML::Presentation
+    category:      math
+    plane1:        true
+  cmml:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::MathML::Content
+    category:      math
+    mode:          pragmatic
+  om:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::OpenMath
+    category:      math
+  xmath:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::XMath
+    category:      math
+  mathtex:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::TeXMath
+    category:      math
+  # Translators for graphics
+  graphics:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::Graphics
+    category:      graphics
     #  maps:          []
-    picturesvg:
-      class:         LaTeXML::Post::SVG
-    pictureimages:
-      class:         LaTeXML::Post::PictureImages
-  xslt:
-    xslt  :
-      class:         LaTeXML::Post::XSLT
-      defaultresources: true
-  package:
-    writer :
-      class:         LaTeXML::Post::Writer
-    manifest:
-      position:      10
-      class:         LaTeXML::Post::Manifest
-    packager:
-      position:      20
+  picturesvg:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::SVG
+    category:      graphics
+  pictureimages:
+    after:         crossref
+    before:        xslt
+    class:         LaTeXML::Post::PictureImages
+    category:      graphics
+  # XSLT
+  xslt  :
+    after:         crossref
+    class:         LaTeXML::Post::XSLT
+    defaultresources: true
+  # Packaging the results
+  writer :
+    after:         xslt
+    class:         LaTeXML::Post::Writer
+  manifest:
+    before:        packager
+    after:         writer
+    class:         LaTeXML::Post::Manifest
+  packager:
+

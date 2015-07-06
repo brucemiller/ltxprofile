@@ -1,7 +1,7 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  html.ltxcfg                                                         | #
-# | Configuration for generating default HTML (currently HTML5)          | #
+# |  output-html5.ltxcfg                                                | #
+# | Configuration for generating HTML5                                  | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -11,5 +11,13 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-# Standin for generic HTML: We'll use HTML5
-include: html5
+# Supports conversion to HTML5, by default with Presentation MathML & SVG
+include: post
+defaults:
+  pmml:
+    enabled: true
+  picturesvg:
+    enabled: true
+  xslt:
+    enabled: true
+    stylesheet: LaTeXML-html5.xsl

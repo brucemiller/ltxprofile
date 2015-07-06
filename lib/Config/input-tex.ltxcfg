@@ -1,7 +1,7 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  epub.ltxcfg                                                        | #
-# | Configuration for converting to ePub (3)                            | #
+# |  intput-tex.ltxcfg                                                  | #
+# | Configuration for processing *.tex inputs                           | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -11,15 +11,11 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-include: xhtml
+# Enable basic digestion TeX->XML
 defaults:
-  xslt:
+  digest:
     enabled: true
-    stylesheet: LaTeXML-epub3.xsl
-  manifest:
+  rewrite :
     enabled: true
-    class: LaTeXML::Post::Manifest::Epub
-  packager:
+  mathparser :
     enabled: true
-    class: LaTeXML::Post::Zip
-

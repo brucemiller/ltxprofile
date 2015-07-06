@@ -6,7 +6,6 @@ use lib "$FindBin::RealBin/../lib";
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 use YAML::Tiny;
-use Data::Dumper;
 use Text::Wrap;
 
 my $CONFIGDIR = "$FindBin::RealBin/../lib/Config";
@@ -29,10 +28,21 @@ my $destination;
 my $opts = {};    # not-yet-handled options.
 # NOTE: Need provision for checking for allowed values of certain parameters?
 #  Handled during command-line processing? during config parsing? during instanciation?
-my $nmaths  = 0;
 my @options = ();
 sub inc   { push(@options, 'include: ' . $_[0]); }
 sub incif { push(@options, 'includeif: ' . $_[0]); }
+my @math_formats = ();
+
+sub setmath {
+  my ($format, $enabled) = @_;
+  if ($enabled) {
+    my $prev = $math_formats[-1];
+    push(@math_formats, $_[0]);
+    set($format . ":enabled", 'true');
+    set($format . ":after", $prev) if $prev; }
+  else {
+    @math_formats = grep { $_ ne $_[0] } @math_formats;
+    set($format . ":enabled", 'false'); } }
 
 sub set {
   my ($key, $value) = @_;
@@ -43,11 +53,11 @@ sub Boole { return ($_[0] ? 'true' : 'false'); }
 my $spec = {
   "output=s" => sub {
     $destination = $_[1];
-    if ($destination =~ /\.(\w+)$/) { incif($1); }
+    if ($destination =~ /\.(\w+)$/) { incif('output-'.$1); }
     set("global:destination: '$_[1]'"); },
   "destination=s" => sub {
     $destination = $_[1];
-    if ($destination =~ /\.(\w+)$/) { incif($1); }
+    if ($destination =~ /\.(\w+)$/) { incif('output-'.$1); }
     set('global:destination', $_[1]); },
   "base=s"          => sub { set('global:basedir',         $_[1]); },          # diff from sitedir?
   "log=s"           => sub { set('global:log',             $_[1]); },
@@ -61,48 +71,43 @@ my $spec = {
   "documentid=s"    => sub { set('digest:documentid',      $_[1]); },
   "includestyles"   => sub { set('digest:includestyles',   'true'); },
   "inputencoding=s" => sub { set('digest:inputencoding',   $_[1]); },
-  "xml"      => sub { inc('xml'); $sawformat      = 1; },
-  "tex"      => sub { inc('tex'); $sawformat      = 1; },    # TeX OUTPUT!!!!
-  "box"      => sub { inc('box'); $sawformat      = 1; },
-  "format=s" => sub { inc($_[1]); $sawformat      = 1; },
-  "bibtex"   => sub { inc('bib'); $sawinputformat = 1; },
+  "xml"      => sub { inc('output-xml'); $sawformat      = 1; },
+  "tex"      => sub { inc('output-tex'); $sawformat      = 1; },    # TeX OUTPUT!!!!
+  "box"      => sub { inc('output-box'); $sawformat      = 1; },
+  "format=s" => sub { inc('output-'.$_[1]); $sawformat      = 1; },
+  "bibtex"   => sub { inc('input-bib'); $sawinputformat = 1; },
   "profile=s" => sub { inc($_[1]); },
-  "mode=s"    => sub { inc($_[1]); },                           # alias
+  "mode=s"    => sub { inc($_[1]); },                           # alias?
   "noparse"   => sub { set('mathparser:enabled', 'false'); },
   "parse=s"   => sub { set('mathparser:enabled', 'true');
     set('mathparser:engine', $_[1]); },
   # is this really even an option?
   # "cache_key=s" => \$$opts{cache_key},                              # ?
-  "source=s"                 => sub { set('global:source',            $_[1]); },
-  "embed"                    => sub { set('packager:whatsout',        'fragment'); },
-  "whatsin=s"                => sub { set('global:whatsin',           $_[1]); },          # global??
-  "whatsout=s"               => sub { set('packager:whatsout',        $_[1]); },
-  "autoflush=i"              => sub { set('global:input_limit',       $_[1]); },
-  "timeout=i"                => sub { set('global:timeout',           $_[1]); },
-  "expire=i"                 => sub { set('global:expire',            $_[1]); },
-  "address=s"                => sub { set('global:address',           $_[1]); },
-  "port=i"                   => sub { set('global:port',              $_[1]); },
-  "post!"                    => sub { inc('post'); },
-  "omitdoctype!"             => sub { set('writer:omitdoctype',       Boole($_[1])); },
-  "mathimages!"              => sub { set('mathimages:enabled',       Boole($_[1])); },
+  "source=s"     => sub { set('global:source',      $_[1]); },
+  "embed"        => sub { set('packager:whatsout',  'fragment'); },
+  "whatsin=s"    => sub { set('global:whatsin',     $_[1]); },          # global??
+  "whatsout=s"   => sub { set('packager:whatsout',  $_[1]); },
+  "autoflush=i"  => sub { set('global:input_limit', $_[1]); },
+  "timeout=i"    => sub { set('global:timeout',     $_[1]); },
+  "expire=i"     => sub { set('global:expire',      $_[1]); },
+  "address=s"    => sub { set('global:address',     $_[1]); },
+  "port=i"       => sub { set('global:port',        $_[1]); },
+  "post!"        => sub { inc('post'); },
+  "omitdoctype!" => sub { set('writer:omitdoctype', Boole($_[1])); },
+  "mathimages!" => sub { setmath('mathimages', $_[1]); },
   "mathimagemagnification=f" => sub { set('mathimages:magnification', $_[1]); },
-  "mathsvg!"                 => sub { set('mathsvg:enabled',          Boole($_[1])); },
-  "linelength=i"             => sub { set('pmml:linelength',          $_[1]); },
-  "plane1!"                  => sub { set('pmml:plane1',              Boole($_[1])); },
-  "hackplane1!"              => sub { set('pmml:hackplane1',          Boole($_[1])); },
-  "presentationmathml|pmml!" => sub { set('pmml:enabled',             Boole($_[1]));
-    set('pmml:position', $nmaths++) if $_[1]; },
-  "contentmathml|cmml!" => sub { set('cmml:enabled', Boole($_[1]));
-    set('cmml:position', $nmaths++) if $_[1]; },
-  "openmath|om!" => sub { set('om:enabled', Boole($_[1]));
-    set('om:position', $nmaths++) if $_[1]; },
-  "keepXMath!" => sub { set('xmath:enabled', Boole($_[1]));
-    set('xmath:position', $nmaths++) if $_[1]; },
-  "mathtex!" => sub { set('mathtex:enabled', Boole($_[1]));
-    set('mathtex:position', $nmaths++) if $_[1]; },
-  "stylesheet=s" => sub { set('xslt:enabled', 'true');
+  "mathsvg!" => sub { setmath('mathsvg', $_[1]); },
+  "linelength=i" => sub { set('pmml:linelength', $_[1]); },
+  "plane1!"      => sub { set('pmml:plane1',     Boole($_[1])); },
+  "hackplane1!"  => sub { set('pmml:hackplane1', Boole($_[1])); },
+  "presentationmathml|pmml!" => sub { setmath('pmml',    $_[1]); },
+  "contentmathml|cmml!"      => sub { setmath('cmml',    $_[1]); },
+  "openmath|om!"             => sub { setmath('om',      $_[1]); },
+  "keepXMath!"               => sub { setmath('xmath',   $_[1]); },
+  "mathtex!"                 => sub { setmath('mathtex', $_[1]); },
+  "stylesheet=s" => sub { set('xslt:enabled', 'true');    # or default?
     set('xslt:stylesheet', $_[1]); },
-  "xsltparameter=s" => sub { set('xslt:enabled', 'true');
+  "xsltparameter=s" => sub { set('xslt:enabled', 'true');    # or default?
     set('xslt:parameters', $_[1]); },
   "timestamp=s"       => sub { set('xslt:timestamp',        $_[1]); },
   "defaultresources!" => sub { set('xslt:defaultresources', Boole($_[1])); },
@@ -120,23 +125,23 @@ my $spec = {
     set('split:splitpath', $_[1]); },
   "splitnaming=s" => sub { set('split:enabled', 'true');
     set('split:splitnaming', $_[1]); },
-  "scan!" => sub { set('scan:enabled', 'true'); },
-  "prescan"    => sub { set("scan:enabled', true"); },       # AND disable other post PHASE!!!
-  "crossref!"  => sub { set('crossref:enabled', 'true'); },
-  "urlstyle=s" => sub { set('crossref:urlstyle', $_[1]); },
-  "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc', $_[1]); },
-  "numbersections!"     => sub { set('crossref:numbersections',  Boole($_[1])); },
-  "index!"              => sub { set('index:enabled',            Boole($_[1])); },
-  "permutedindex!"      => sub { set('indexpermuted',            'true'); },
-  "splitindex!"         => sub { set('indexsplit',               Boole($_[1])); },
-  "bibliography=s"      => sub { set('bibbibliographies',        $_[1]); },
-  "nobibliography"      => sub { set('bib:enabled',              'false'); },
-  "splitbibliography!"  => sub { set('bib:split',                Boole($_[1])); },
-  "dbfile=s"            => sub { set('global:dbfile',            $_[1]); },
-  "sitedirectory=s"     => sub { set('global:sitedirectory',     $_[1]); },
-  "resourcedirectory=s" => sub { set('global:resourcedirectory', $_[1]); },
-  "sourcedirectory=s"   => sub { set('globalsourcedir',          $_[1]); },
-  "graphicimages!"      => sub { set('graphicsenabled',          Boole($_[1])); },
+  "scan!"                  => sub { set('scan:enabled',             Boolean($_[1])); },
+  "prescan"                => sub { set('global:lastprocessor',     'scan'); },
+  "crossref!"              => sub { set('crossref:enabled',         'true'); },
+  "urlstyle=s"             => sub { set('crossref:urlstyle',        $_[1]); },
+  "navigationtoc|navtoc=s" => sub { set('crossref:navigation_toc',  $_[1]); },
+  "numbersections!"        => sub { set('crossref:numbersections',  Boole($_[1])); },
+  "index!"                 => sub { set('index:enabled',            Boole($_[1])); },
+  "permutedindex!"         => sub { set('indexpermuted',            'true'); },
+  "splitindex!"            => sub { set('indexsplit',               Boole($_[1])); },
+  "bibliography=s"         => sub { set('bibbibliographies',        $_[1]); },
+  "nobibliography"         => sub { set('bib:enabled',              'false'); },
+  "splitbibliography!"     => sub { set('bib:split',                Boole($_[1])); },
+  "dbfile=s"               => sub { set('global:dbfile',            $_[1]); },
+  "sitedirectory=s"        => sub { set('global:sitedirectory',     $_[1]); },
+  "resourcedirectory=s"    => sub { set('global:resourcedirectory', $_[1]); },
+  "sourcedirectory=s"      => sub { set('globalsourcedir',          $_[1]); },
+  "graphicimages!"         => sub { set('graphicsenabled',          Boole($_[1])); },
   "graphicsmap=s" => sub {    # graphicsmap=srctype.desttype
     my ($src, $dest) = split(/\./, $_[1]);
     $dest = $src unless $dest;
@@ -163,12 +168,12 @@ GetOptions(%$spec);
 my $source = $ARGV[0];
 
 # Add a couple of special case options
-# If format explicitly given, remove "includif: $format" from @options
+# If format explicitly given, remove "includeif: $format" from @options
 if ($sawformat) {
   @options = grep { $_ !~ /^includeif:/ } @options; }
 # Load configuration implied by input & output formats.
 if (!$sawinputformat && $source && ($source =~ /\.(tex|bib)$/)) {
-  unshift(@options, "include: $1"); }
+  unshift(@options, "include: input-$1"); }
 unshift(@options, "settings: global:\n    verbosity: $verbosity") if $verbosity;
 
 #======================================================================
@@ -177,26 +182,11 @@ print "Options as YAML:\n$yoptions\n";
 
 our $config = LoadConfiguration($yoptions);
 
-#print "Config: " . Dumper($config);
+#minidump("Definitions",$$config{definitions});
+#minidump("Defaults",$$config{defaults});
+#minidump("Settings",$$config{settings});
 makePlan($config);
 
-#======================================================================
-# The known Processing Phases
-our @PHASES;
-
-BEGIN {
-  # Try to condense this a bit more? (using sensible "position" values to sort within phases)
-  # And, not yet configurable either!!
-  @PHASES = (qw(
-      digestion
-      splitting
-      scanning
-      crossreferencing
-      graphicstranslation
-      mathtranslation
-      xslt
-      packaging));
-}
 #======================================================================
 # Configuration consists of configuration files and command-line options.
 # These are composed in a way to produce a configuration which determines
@@ -236,12 +226,19 @@ sub LoadConfiguration {
   mergeConfig($config, YAML::Tiny->read_string($options));
   # NOTE: We could copy settings to an actualy "configuration" object,
   # and do all defaulting/resolution there, so the original is unchanged?
-  # Special case for mathtranslation
-  my @m = grep { (($$config{settings}{$_}{phase} || '') eq 'mathtranslation') }
-    keys %{ $$config{settings} };
-  # If we have enabled mathtranslations, remove enabled from defaults before applying
-  if (grep { (($$config{settings}{$_}{enabled} || '') eq 'true') } @m) {
-    map { $$config{defaults}{$_}{enabled} = 'false' } @m; }
+
+  my $settings = $$config{settings};
+
+  # Special case defaulting for categories:
+  # the idea being you'll typically want at least one from each category
+  my %categories = ();
+  map { $$settings{$_}{category}
+      && push(@{ $categories{ $$settings{$_}{category} } }, $_) } keys %$settings;
+  foreach my $category (keys %categories) {
+    my @p = @{ $categories{$category} };
+    # If we have enabled one from the category, remove enabled from defaults for others
+    if (grep { (($$settings{$_}{enabled} || '') eq 'true') } @p) {
+      map { $$config{defaults}{$_}{enabled} = 'false' } @p; } }
 
   applyDefaults($config, $$config{defaults});
   return $config; }
@@ -279,11 +276,11 @@ sub mergeValue {
   my $key    = $keys[-1];
   my $prev   = $$object{$key};
   my $struct = 'scalar';    # the type of structure to maintain in $config: HASH, ARRAY, scalar
-  if ($keys[0] eq 'definition') {
+  if ($keys[0] eq 'definitions') {
     # definition block gets special treatment
     # Possible type-checking of type specifiers?
     $struct = (ref $prev) || (ref $value); }    # use previous structure, or copy from $value
-  elsif (my $type = configLookup($config, 'definition', @keys[1 .. $#keys])) {
+  elsif (my $type = configLookup($config, 'definitions', @keys[1 .. $#keys])) {
     # Otherwise, we'll type-check the leaves, getting the type from the definitions section
     # $type can be hash for intermediate levels, else a declared type.
     $struct = (ref $type) || ($type =~ /^list\[/ ? 'ARRAY' : 'scalar');
@@ -329,15 +326,14 @@ sub configLookup {
 # This could evolve to return the "normalized" $value?
 sub configCheckType {
   my ($type, $value, @keys) = @_;
-  # pathname, boolean, int, string, phasename, classname, date
+  # pathname, boolean, int, string, classname, date
   # or list[$type], hash[$ignored], choice[lit1,lit2...]
   if    ($type eq 'boolean') { return 1 if $value =~ /^(?:true|false)$/; }
   elsif ($type eq 'int')     { return 1 if $value =~ /^(?:\+|\-)?\d+$/; }
   elsif ($type eq 'string')  { return 1; }
   elsif ($type eq 'pathname')  { return 1; }
   elsif ($type eq 'classname') { return 1 if $value =~ /^(\w+)(?:\:\:\w+)*$/; }
-  elsif ($type eq 'phasename') { return 1 if grep { $value eq $_ } @PHASES; }
-  elsif ($type eq 'date') { return 1 if $value =~ /^\d{4}-\d{2}-\d{2}$/; }
+  elsif ($type eq 'date')      { return 1 if $value =~ /^\d{4}-\d{2}-\d{2}$/; }
   elsif ($type =~ /^list\[(\w+)\]$/) {
     my $subtype = $1;
     if (((ref $value) || '') eq 'ARRAY') {
@@ -362,35 +358,85 @@ sub configWarning {
     . " for " . join('->', @keys) . " = $value\n"; }
 
 #======================================================================
-# Analyzing the resulting configuration to generate a Processing Plan
+# Analyzing the resulting configuration settings to generate a Processing Plan
 # Note current code doesn't support this level of abstraction,
 # although it is similar to the post-processing chain.
 sub makePlan {
   my ($config) = @_;
   my $settings = $$config{settings};
-  print "Global: " . minidump($$settings{global}) . "\n";
-  my @processors = ();
-  foreach my $phase (@PHASES) {
-    my @p = sort { ($$settings{$a}{position} || 0) <=> ($$settings{$b}{position} || 0) }
-      grep { (($$settings{$_}{phase} || '') eq $phase) && (($$settings{$_}{enabled} || '') eq 'true') }
-      keys %$settings;
-    push(@processors, @p); }
-  # Special hack for Parallel Markup: add all but first mathtranslation to the first, as secondaries
-  my @m = grep { ($$settings{$_}{phase} || '') eq 'mathtranslation' } @processors;
+  minidump("Global", $$settings{global});
+  # Sort processors first (before pruning disabled ones)
+  my @processors = sortProcessors($settings);
+  # Now trim off those before|after first|last processor
+  if (my $first = $$settings{global}{firstprocessor}) {
+    if (grep { $_ eq $first } @processors) {
+      while ($processors[0] ne $first) {
+        shift(@processors); } } }
+  if (my $last = $$settings{global}{lastprocessor}) {
+    if (grep { $_ eq $last } @processors) {
+      while ($processors[-1] ne $last) {
+        pop(@processors); } } }
+  # finally, remove those that are disabled
+  @processors = grep { ($$settings{$_}{enabled} || '') eq 'true' } @processors;
+
+  # Hack for Parallel Markup: add all but first in category math to the first, as secondaries
+  my @m = grep { ($$settings{$_}{category} || '') eq 'math' } @processors;
   if (scalar(@m) > 1) {
     my ($primary, @secondaries) = @m;
     $$settings{$primary}{secondaries} = [map { $$settings{$_} } @secondaries];
     # Remove other mathtranslators
-    @processors = grep { ($_ eq $primary) || (($$settings{$_}{phase} || '') ne 'mathtranslation') }
+    @processors = grep { ($_ eq $primary) || (($$settings{$_}{category} || '') ne 'math') }
       @processors; }
+
   print "Processing plan:\n";
   foreach my $p (@processors) {
-    print "$p : " . minidump($$settings{$p}) . "\n"; }
+    minidump($p, $$settings{$p}); }
 }
 
+# Based on Kahn(1962) topological sort algorithm (see wikipedia)
+sub sortProcessors {
+  my ($settings) = @_;
+  # don't know if sorting makes it more reproducible (toposort is NOT unique!)
+  my @processors  = sort grep { $_ ne 'global' } keys %$settings;
+  my @edges       = ();                                          # list of edges [<fromnode>,<tonode>]
+  my %hasincoming = map { ($_ => 0) } @processors;
+  # Form a "graph" of all processors
+  foreach my $p (@processors) {
+    foreach my $a (@{ $$settings{$p}{before} }) {
+      $hasincoming{$a}++;
+      push(@edges, [$p, $a]); }
+    foreach my $b (@{ $$settings{$p}{after} }) {
+      $hasincoming{$p}++;
+      push(@edges, [$b, $p]); } }
+  # Find the processors with no incoming edges
+  my @todo = grep { $hasincoming{$_} == 0 } @processors;
+  minidump("Edges",  [@edges]);
+  minidump("Starts", [@todo]);
+  my @sorted = ();
+  while (@todo) {
+    my $n = pop(@todo);
+    push(@sorted, $n);
+    my @outgoing = sort map { ($$_[0] eq $n ? ($$_[1]) : ()) } @edges;
+    @edges = grep { $$_[0] ne $n } @edges;    # Remove edges leaving $n
+    foreach my $m (@outgoing) {
+      if (grep { $$_[1] eq $m } @edges) { }    # $m has incoming edges
+      else {
+        push(@todo, $m); } } }
+  minidump("Remaining", [@edges]);
+  minidump("Sorted",    [@sorted]);
+  if (@edges) {
+    warn "processor chain has cycles";
+    # ORR it is not connected?
+    return (); }
+  return @sorted; }
+
+#======================================================================
 # Just for debugging the plan construction...
 sub minidump {
-  return wrap("", "         ", minidump_aux($_[0])); }
+  my ($label, $object) = @_;
+  my $l = 12;
+  $label = $label . (' ' x ($l - 2 - length($label))) . ': ';
+  print wrap($label, (' ' x $l), minidump_aux($_[1])) . "\n"; }
 
 sub minidump_aux {
   my ($value) = @_;
@@ -398,8 +444,8 @@ sub minidump_aux {
   if (!$ref) {
     return (defined $value ? $value : 'undef'); }
   elsif ($ref eq 'HASH') {
-    return '{' . join(', ', map { $_ . '=>' . minidump($$value{$_}) } sort keys %$value) . '}'; }
+    return '{' . join(', ', map { $_ . '=>' . minidump_aux($$value{$_}) } sort keys %$value) . '}'; }
   elsif ($ref eq 'ARRAY') {
-    return '[' . join(', ', map { minidump($_) } @$value) . ']'; } }
+    return '[' . join(', ', map { minidump_aux($_) } @$value) . ']'; } }
 
 #======================================================================

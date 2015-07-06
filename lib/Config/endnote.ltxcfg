@@ -12,14 +12,15 @@
 # \=========================================================ooo==U==ooo=/ #
 #
 # Hypothetical plugin supporting endnotes
-definition:
+definitions:
   endnote:
-    phase   : phasename
-    enabled : boolean
-    class   : classname
+    before:     list[string]
+    after:      list[string]
+    enabled:    boolean
+    class:      classname
 ---    
 defaults:
   endnote:
-    phase   : crossreferencing
-    enabled : true
-    class   : LaTeXML::Plugin::Endnote
+    after:      scan
+    enabled:    true
+    class:      LaTeXML::Plugin::Endnote

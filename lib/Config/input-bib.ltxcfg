@@ -1,6 +1,6 @@
 #  -*- mode:yaml -*-
 # /=====================================================================\ #
-# |  bib.ltxcfg                                                         | #
+# |  input-bib.ltxcfg                                                   | #
 # | Configuration for processing *.bib inputs                           | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -11,7 +11,7 @@
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 #
-include: tex
+include: input-tex
 defaults:
   bibtex:
     enabled: true
