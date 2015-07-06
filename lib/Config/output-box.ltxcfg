@@ -1,0 +1,17 @@
+#  -*- mode:yaml -*-
+# /=====================================================================\ #
+# |  output-box.ltxcfg                                                  | #
+# | Configuration for generating default HTML (currently HTML5)         | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+#
+# Special case, just digest & return the expanded & digested boxes
+global:
+  lastprocessor: digest
+
