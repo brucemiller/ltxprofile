@@ -276,6 +276,8 @@ sub mergeValue {
   my $key    = $keys[-1];
   my $prev   = $$object{$key};
   my $struct = 'scalar';    # the type of structure to maintain in $config: HASH, ARRAY, scalar
+  ### HACK!! Strip comments?
+  $value =~ s/\s*#.*$//g if defined $value;
   if ($keys[0] eq 'definitions') {
     # definition block gets special treatment
     # Possible type-checking of type specifiers?
@@ -347,9 +349,9 @@ sub configCheckType {
     my @choices = split(/\s*,\s*/, $1);
     return 1 if grep { $value eq $_ } @choices; }
   else {
-    configWarning("Unknown type $type", $value, @keys);
+    configWarning("Unknown type '$type'", $value, @keys);
     return 0; }
-  configWarning("Value not of type $type", $value, @keys);
+  configWarning("Value not of type '$type'", $value, @keys);
   return 0; }
 
 sub configWarning {
